@@ -4,14 +4,24 @@ import SummaryCards from './components/SummaryCards';
 import SemanaTab from './components/Semana/SemanaTab';
 import TrabajadoresTab from './components/Trabajadores/TrabajadoresTab';
 import ReporteTab from './components/Reporte/ReporteTab';
+import AdminsTab from './components/Admin/AdminsTab';
+import LoginPage from './components/Auth/LoginPage';
 import ImportarModal from './components/Importar/ImportarModal';
-import { getTrabajadores, getRamas, getRegistros } from './api';
+import {
+  getTrabajadores,
+  getRamas,
+  getRegistros,
+  getSession,
+  login,
+  logout,
+} from './api';
 import { getSemanaKey } from './utils/week';
 
 const TABS = [
-  { id: 'semana', label: '📅 Semana' },
-  { id: 'trabajadores', label: '👷 Trabajadores' },
-  { id: 'reporte', label: '📊 Reporte' },
+  { id: 'semana', label: 'Semana' },
+  { id: 'trabajadores', label: 'Trabajadores' },
+  { id: 'reporte', label: 'Reporte' },
+  { id: 'admins', label: 'Admins' },
 ];
 
 export default function App() {
@@ -22,32 +32,42 @@ export default function App() {
   const [registros, setRegistros] = useState([]);
   const [importarOpen, setImportarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [currentAdmin, setCurrentAdmin] = useState(null);
 
   const semanaKey = getSemanaKey(semanaOffset);
 
-  const loadBase = useCallback(async () => {
+  const loadSession = useCallback(async () => {
     try {
-      const [t, r] = await Promise.all([getTrabajadores(), getRamas()]);
-      setTrabajadores(t);
-      setRamas(r);
-    } catch (e) {
-      console.error('Error loading base data', e);
+      const data = await getSession();
+      setCurrentAdmin(data.admin);
+    } catch {
+      setCurrentAdmin(null);
+    } finally {
+      setAuthChecked(true);
     }
   }, []);
 
+  const loadBase = useCallback(async () => {
+    const [t, r] = await Promise.all([getTrabajadores(), getRamas()]);
+    setTrabajadores(t);
+    setRamas(r);
+  }, []);
+
   const loadRegistros = useCallback(async () => {
-    try {
-      const r = await getRegistros(semanaKey);
-      setRegistros(r);
-    } catch (e) {
-      console.error('Error loading registros', e);
-    }
+    const r = await getRegistros(semanaKey);
+    setRegistros(r);
   }, [semanaKey]);
 
   useEffect(() => {
+    loadSession();
+  }, [loadSession]);
+
+  useEffect(() => {
+    if (!currentAdmin) return;
     setLoading(true);
     Promise.all([loadBase(), loadRegistros()]).finally(() => setLoading(false));
-  }, [loadBase, loadRegistros]);
+  }, [currentAdmin, loadBase, loadRegistros]);
 
   const refresh = useCallback(() => {
     loadBase();
@@ -56,21 +76,44 @@ export default function App() {
 
   const refreshRegistros = useCallback(() => loadRegistros(), [loadRegistros]);
 
-  if (loading) {
+  const handleLogin = async (credentials) => {
+    const data = await login(credentials);
+    setCurrentAdmin(data.admin);
+    setLoading(true);
+    await Promise.all([loadBase(), loadRegistros()]);
+    setLoading(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setCurrentAdmin(null);
+    setImportarOpen(false);
+    setActiveTab('semana');
+  };
+
+  if (!authChecked || (currentAdmin && loading)) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-dim)' }}>
-        Cargando…
+        Cargando...
       </div>
     );
   }
 
+  if (!currentAdmin) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <>
-      <Header onImportar={() => setImportarOpen(true)} />
+      <Header
+        onImportar={() => setImportarOpen(true)}
+        currentAdmin={currentAdmin}
+        onLogout={handleLogout}
+      />
 
       <div className="container">
         <nav className="tabs">
-          {TABS.map(t => (
+          {TABS.map((t) => (
             <button
               key={t.id}
               className={`tab-btn${activeTab === t.id ? ' active' : ''}`}
@@ -83,10 +126,7 @@ export default function App() {
 
         {activeTab === 'semana' && (
           <>
-            <SummaryCards
-              trabajadores={trabajadores}
-              registros={registros}
-            />
+            <SummaryCards trabajadores={trabajadores} registros={registros} />
             <SemanaTab
               trabajadores={trabajadores}
               ramas={ramas}
@@ -117,6 +157,8 @@ export default function App() {
             setSemanaOffset={setSemanaOffset}
           />
         )}
+
+        {activeTab === 'admins' && <AdminsTab />}
       </div>
 
       <ImportarModal
