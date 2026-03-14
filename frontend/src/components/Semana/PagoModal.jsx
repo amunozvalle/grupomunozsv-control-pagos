@@ -45,6 +45,8 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           extra: Number(extra) || 0,
           anticipo: Number(anticipo) || 0,
           notas,
+          pagado: record?.pagado,
+          pagado_at: record?.pagado_at || null,
         }),
       ];
       const workerUpdates = {};

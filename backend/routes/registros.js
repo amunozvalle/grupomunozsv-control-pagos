@@ -8,14 +8,19 @@ router.get('/:semana', (req, res) => {
 
 router.post('/:semana', (req, res) => {
   const { semana } = req.params;
-  const { trabajador_id, dias, extra, anticipo, notas } = req.body;
+  const { trabajador_id, dias, extra, anticipo, notas, pagado, pagado_at } = req.body;
   if (!trabajador_id) return res.status(400).json({ error: 'trabajador_id requerido' });
-  const row = db.upsertRegistro(semana, trabajador_id, {
+  const fields = {
     dias: dias || {},
     extra: Number(extra) || 0,
     anticipo: Number(anticipo) || 0,
     notas: notas || '',
-  });
+  };
+  if (pagado !== undefined) {
+    fields.pagado = Boolean(pagado);
+    fields.pagado_at = pagado ? (pagado_at || new Date().toISOString()) : null;
+  }
+  const row = db.upsertRegistro(semana, trabajador_id, fields);
   res.json(row);
 });
 
