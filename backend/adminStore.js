@@ -47,6 +47,27 @@ function seedBootstrapAdmin() {
   writeAdmins([admin]);
 }
 
+function ensureBootstrapAdmin(admins) {
+  const username = process.env.ADMIN_BOOTSTRAP_USERNAME || process.env.APP_USERNAME || '';
+  const password = process.env.ADMIN_BOOTSTRAP_PASSWORD || process.env.APP_PASSWORD || '';
+  if (!username || !password) return admins;
+
+  const normalized = normalizeUsername(username);
+  if (admins.some((admin) => admin.username === normalized)) {
+    return admins;
+  }
+
+  const nextAdmins = [...admins, {
+    username: normalized,
+    displayName: String(username).trim(),
+    passwordHash: hashPassword(password),
+    createdAt: new Date().toISOString(),
+    createdBy: 'bootstrap',
+  }];
+  writeAdmins(nextAdmins);
+  return nextAdmins;
+}
+
 function readAdmins() {
   ensureDataDir();
   if (!fs.existsSync(ADMINS_PATH)) {
@@ -57,7 +78,7 @@ function readAdmins() {
   try {
     const raw = fs.readFileSync(ADMINS_PATH, 'utf8');
     const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(data) ? ensureBootstrapAdmin(data) : [];
   } catch (error) {
     console.error('[adminStore] Error leyendo admins.json:', error.message);
     return [];
