@@ -18,8 +18,8 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       <div className="section-header report-print-header">
         <span className="section-title">Reporte de Nomina</span>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary btn-sm no-print" onClick={() => window.print()}>
-            🖨 Imprimir
+          <button className="btn btn-primary btn-sm no-print" onClick={() => window.print()} title="Imprimir">
+            🖨
           </button>
           <div className="week-nav no-print">
             <button className="btn btn-icon btn-outline" onClick={() => setSemanaOffset((o) => o - 1)}>‹</button>
