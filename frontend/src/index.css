@@ -650,6 +650,38 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
   padding: 1.2rem;
 }
 
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  header,
+  .tabs,
+  .no-print {
+    display: none !important;
+  }
+
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .report-card,
+  .report-card-header,
+  .report-row {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+  }
+
+  .report-row-value,
+  .report-row-label,
+  .section-title {
+    color: #000 !important;
+  }
+}
+
 @media (max-width: 640px) {
   .registrar-card {
     padding: 1rem;
