@@ -1,0 +1,54 @@
+export const DIAS_KEYS = ['L', 'M', 'X', 'J', 'V', 'S'];
+export const DIAS_LABELS = { L: 'Lun', M: 'Mar', X: 'Mie', J: 'Jue', V: 'Vie', S: 'Sab' };
+
+export function getSemanaKey(offset = 0) {
+  const today = new Date();
+  const dow = today.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff + offset * 7);
+  return monday.toISOString().slice(0, 10);
+}
+
+export function formatSemana(key) {
+  const start = new Date(`${key}T12:00:00`);
+  const end = new Date(`${key}T12:00:00`);
+  end.setDate(end.getDate() + 5);
+  const fmt = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }).replace('.', '');
+  return `${fmt(start)} - ${fmt(end)}`;
+}
+
+export function formatSemanaWhatsapp(key) {
+  const start = new Date(`${key}T12:00:00`);
+  const end = new Date(`${key}T12:00:00`);
+  end.setDate(end.getDate() + 5);
+  const fmt = (d) => {
+    const day = d.toLocaleDateString('es-MX', { day: '2-digit' });
+    const month = d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
+    return `${day}-${month}`;
+  };
+  return `${fmt(start)} - ${fmt(end)}`;
+}
+
+export function formatSemanaWhatsappNatural(key) {
+  const start = new Date(`${key}T12:00:00`);
+  const end = new Date(`${key}T12:00:00`);
+  end.setDate(end.getDate() + 5);
+  const fmt = (d) => {
+    const day = d.toLocaleDateString('es-MX', { day: '2-digit' });
+    const month = d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
+    return `${day}-${month}`;
+  };
+  return `del ${fmt(start)} al ${fmt(end)}`;
+}
+
+export function fmt(n) {
+  return Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+export function calcPago(trabajador, record) {
+  if (!record) return 0;
+  const dias = Object.values(record.dias || {}).reduce((s, v) => s + v, 0);
+  const diario = (trabajador?.sueldo || 0) / 6;
+  return dias * diario + (record.extra || 0) - (record.anticipo || 0);
+}
