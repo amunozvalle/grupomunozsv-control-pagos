@@ -11,7 +11,8 @@ const router = express.Router();
 const EMPTY_DIAS = { L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 };
 
 function withBaseUrl(req, token) {
-  return `${req.protocol}://${req.get('host')}/registrar/${token}`;
+  const proto = req.get('x-forwarded-proto') || req.protocol;
+  return `${proto}://${req.get('host')}/registrar/${token}`;
 }
 
 function getSemanaActualKey() {

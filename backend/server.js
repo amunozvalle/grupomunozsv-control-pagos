@@ -5,6 +5,7 @@ const path = require('path');
 const { attachSession, requireAdmin } = require('./auth');
 
 const app = express();
+app.set('trust proxy', true);
 
 app.use(cors());
 app.use(express.json());
