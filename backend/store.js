@@ -7,6 +7,7 @@ const path = require('path');
 
 const DATA_DIR = process.env.DATA_DIR || __dirname;
 const DB_PATH = path.join(DATA_DIR, 'pagos.json');
+const SEEDED_DB_PATH = path.join(__dirname, 'pagos.json');
 
 const DEFAULT_RAMAS = [
   { id: 'carpintero', label: 'Carpintero', emoji: '🪚', color: '#c97b3a' },
@@ -20,7 +21,11 @@ function load() {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
   if (!fs.existsSync(DB_PATH)) {
-    return { ramas: DEFAULT_RAMAS, trabajadores: [], registros: {} };
+    if (DB_PATH !== SEEDED_DB_PATH && fs.existsSync(SEEDED_DB_PATH)) {
+      fs.copyFileSync(SEEDED_DB_PATH, DB_PATH);
+    } else {
+      return { ramas: DEFAULT_RAMAS, trabajadores: [], registros: {} };
+    }
   }
   try {
     const raw = fs.readFileSync(DB_PATH, 'utf8');
