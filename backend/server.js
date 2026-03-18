@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { attachSession, requireAdmin } = require('./auth');
+const { backupToGithub } = require('./backup-github');
 
 const app = express();
 app.set('trust proxy', true);
@@ -20,6 +21,12 @@ app.use('/api/ramas', requireAdmin, require('./routes/ramas'));
 app.use('/api/registros', requireAdmin, require('./routes/registros'));
 app.use('/api/whatsapp', requireAdmin, require('./routes/whatsapp'));
 app.use('/api/admin-users', requireAdmin, require('./routes/adminUsers'));
+
+// Backup manual desde el dashboard
+app.post('/api/backup-github', requireAdmin, async (req, res) => {
+  const result = await backupToGithub();
+  res.json(result);
+});
 
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 if (fs.existsSync(frontendDist)) {
@@ -44,4 +51,17 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const PORT = Number(process.env.PORT) || 3001;
-app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Backend running on http://localhost:${PORT}`);
+  // Backup diario a GitHub a las 11 PM (hora El Salvador)
+  const msHasta11pm = () => {
+    const now = new Date();
+    const target = new Date(now.toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' }) + 'T23:00:00-06:00');
+    if (target <= now) target.setDate(target.getDate() + 1);
+    return target - now;
+  };
+  setTimeout(function scheduleDaily() {
+    backupToGithub();
+    setTimeout(scheduleDaily, 24 * 60 * 60 * 1000);
+  }, msHasta11pm());
+});
