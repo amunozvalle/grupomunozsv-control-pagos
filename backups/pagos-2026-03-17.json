@@ -57,14 +57,14 @@
       "nombre": "Osmin",
       "rama": "cs7jEDtT9O",
       "sueldo": 160,
-      "telefono": ""
+      "telefono": "+503 7673 3903"
     },
     {
       "id": "eeM05mYGUb",
       "nombre": "Marcos",
       "rama": "cs7jEDtT9O",
       "sueldo": 120,
-      "telefono": ""
+      "telefono": "+503 6311 4992"
     },
     {
       "id": "pon8YMyEZ_",
@@ -78,14 +78,14 @@
       "nombre": "Diego",
       "rama": "cs7jEDtT9O",
       "sueldo": 72,
-      "telefono": ""
+      "telefono": "+503 7960 8031"
     },
     {
       "id": "J4HXWYtYFN",
       "nombre": "Leo",
       "rama": "cs7jEDtT9O",
       "sueldo": 50,
-      "telefono": ""
+      "telefono": "+503 6989 4755"
     },
     {
       "id": "dasf0z0LvE",
@@ -99,21 +99,21 @@
       "nombre": "Beilito",
       "rama": "TodcZv4LH1",
       "sueldo": 120,
-      "telefono": ""
+      "telefono": "+503 7944 8177"
     },
     {
       "id": "JFMeyYCFhx",
       "nombre": "Kevin",
       "rama": "TodcZv4LH1",
       "sueldo": 120,
-      "telefono": ""
+      "telefono": "+503 7531 4008"
     },
     {
       "id": "9uLkB_eNRP",
       "nombre": "Pablo",
       "rama": "vidrieria",
       "sueldo": 200,
-      "telefono": ""
+      "telefono": "+503 7733 2966"
     },
     {
       "id": "TibwSJH8i1",
@@ -127,14 +127,14 @@
       "nombre": "Carlitos",
       "rama": "vidrieria",
       "sueldo": 72,
-      "telefono": ""
+      "telefono": "+503 7867 5061"
     },
     {
       "id": "C88ogzZcs6",
       "nombre": "Andrew",
       "rama": "vidrieria",
       "sueldo": 60,
-      "telefono": ""
+      "telefono": "+503 7006 2252"
     },
     {
       "id": "CIHnchHoHL",
@@ -148,7 +148,7 @@
       "nombre": "Daniel",
       "rama": "albanil",
       "sueldo": 240,
-      "telefono": ""
+      "telefono": "+503 7194 4857"
     },
     {
       "id": "wXXr7U51J1",
@@ -176,35 +176,35 @@
       "nombre": "Yony",
       "rama": "albanil",
       "sueldo": 130,
-      "telefono": ""
+      "telefono": "+503 6982 8595"
     },
     {
       "id": "q0ujpxrwzZ",
       "nombre": "Yefre",
       "rama": "tablaroca",
       "sueldo": 190,
-      "telefono": ""
+      "telefono": "+503 7911 1024"
     },
     {
       "id": "tjNyx7MZru",
       "nombre": "Luis",
       "rama": "tablaroca",
       "sueldo": 150,
-      "telefono": ""
+      "telefono": "+503 6017 5364"
     },
     {
       "id": "D8MldvzcX5",
       "nombre": "Nefi",
       "rama": "tablaroca",
       "sueldo": 130,
-      "telefono": ""
+      "telefono": "+503 7685 8388"
     },
     {
       "id": "5-46P7wfJ2",
       "nombre": "Rony",
       "rama": "tablaroca",
       "sueldo": 100,
-      "telefono": ""
+      "telefono": "+503 7299 3110"
     },
     {
       "id": "3PttMaC_7P",
@@ -633,6 +633,19 @@
         "notas": ""
       },
       "8dhS9_dL75": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 0,
+          "J": 0,
+          "V": 0,
+          "S": 0
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": ""
+      },
+      "3PttMaC_7P": {
         "dias": {
           "L": 1,
           "M": 1,
