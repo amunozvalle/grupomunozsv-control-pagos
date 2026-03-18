@@ -7,7 +7,11 @@ export function getSemanaKey(offset = 0) {
   const diff = dow === 0 ? -6 : 1 - dow;
   const monday = new Date(today);
   monday.setDate(today.getDate() + diff + offset * 7);
-  return monday.toISOString().slice(0, 10);
+  // Use local date (not UTC) to avoid timezone shift after 6 PM in UTC-6
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 export function formatSemana(key) {
