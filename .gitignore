@@ -7,3 +7,6 @@ cloudflared.exe
 cloudflared*.log
 frontend/.env.local
 npm-debug.log*
+backend/pagos.json
+backend/pagos.json.bak
+backend/pagos.json.tmp
