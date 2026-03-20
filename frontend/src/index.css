@@ -32,24 +32,29 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 72px;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 .logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.25rem;
-  letter-spacing: 0.06em;
-  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.logo-img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
 }
 .logo span {
   color: var(--text-dim);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
-  margin-left: 0.5rem;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 .admin-chip {
   border: 1px solid rgba(212, 168, 83, 0.25);

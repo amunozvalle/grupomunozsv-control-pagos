@@ -20,7 +20,8 @@ export default function Header({ onImportar, currentAdmin, onLogout }) {
   return (
     <header>
       <div className="logo">
-        GRUPO MUNOZ<span>Control de Pagos</span>
+        <img src="/logo.png" alt="GRUPO MUÑOZ" className="logo-img" />
+        <span>Control de Pagos</span>
       </div>
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
         {currentAdmin && (
