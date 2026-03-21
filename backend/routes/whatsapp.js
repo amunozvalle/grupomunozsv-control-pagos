@@ -276,4 +276,59 @@ router.post('/apply', (req, res) => {
   res.json({ applied: validRows.length });
 });
 
+// ── WhatsApp Bot endpoints ────────────────────────────────────────────────────
+
+const bot = require('../whatsapp-bot');
+
+// Estado del bot y QR
+router.get('/bot/status', (req, res) => {
+  res.json(bot.getStatus());
+});
+
+// Iniciar bot (genera QR)
+router.post('/bot/init', (req, res) => {
+  bot.initWhatsApp();
+  res.json({ ok: true, message: 'Iniciando WhatsApp...' });
+});
+
+// Listar grupos disponibles para asignar a ramas
+router.get('/bot/grupos', async (req, res) => {
+  try {
+    const chats = await bot.getChats();
+    const configurados = bot.loadGrupos();
+    res.json({ chats, configurados });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Guardar asignación rama → grupo
+router.post('/bot/grupos', (req, res) => {
+  const { configurados } = req.body;
+  bot.saveGrupos(configurados);
+  res.json({ ok: true });
+});
+
+// Enviar recordatorio manual a todas las ramas
+router.post('/bot/recordatorio', async (req, res) => {
+  const db = require('../store');
+  const { semanaKey, semanaLabel } = req.body;
+  const trabajadores = db.getTrabajadores();
+  const ramas = db.getRamas();
+  const registros = db.getRegistros(semanaKey);
+  const result = await bot.enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel });
+  res.json(result);
+});
+
+// Mensaje de prueba a un grupo
+router.post('/bot/test', async (req, res) => {
+  const { groupId, message } = req.body;
+  try {
+    await bot.sendMessage(groupId, message || '✅ Prueba de conexión — Nómina Grupo Muñoz');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 module.exports = router;

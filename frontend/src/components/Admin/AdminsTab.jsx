@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createAdminUser, getAdminUsers } from '../../api';
+import WhatsappBotPanel from './WhatsappBotPanel';
 
-export default function AdminsTab() {
+export default function AdminsTab({ ramas = [] }) {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
@@ -102,6 +103,13 @@ export default function AdminsTab() {
           </button>
         </form>
       </section>
+    </div>
+
+    <div style={{ marginTop: '2rem' }}>
+      <div className="section-header" style={{ marginBottom: '1rem' }}>
+        <span className="section-title">WhatsApp Bot</span>
+      </div>
+      <WhatsappBotPanel ramas={ramas} />
     </div>
   );
 }

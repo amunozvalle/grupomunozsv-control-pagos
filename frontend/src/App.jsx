@@ -158,7 +158,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'admins' && <AdminsTab />}
+        {activeTab === 'admins' && <AdminsTab ramas={ramas} />}
       </div>
 
       <ImportarModal

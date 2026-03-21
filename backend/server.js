@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { attachSession, requireAdmin } = require('./auth');
 const { backupToGithub } = require('./backup-github');
+const { initWhatsApp, enviarRecordatorios, getStatus: waStatus } = require('./whatsapp-bot');
 
 const app = express();
 app.set('trust proxy', true);
@@ -64,4 +65,43 @@ app.listen(PORT, () => {
     backupToGithub();
     setTimeout(scheduleDaily, 24 * 60 * 60 * 1000);
   }, msHasta11pm());
+
+  // Recordatorio WhatsApp cada sábado a las 7 AM (El Salvador)
+  const msHastaSabado7am = () => {
+    const now = new Date();
+    const svNow = new Date(now.toLocaleString('sv-SE', { timeZone: 'America/El_Salvador' }));
+    const day = svNow.getDay(); // 0=dom, 6=sab
+    const daysToSat = (6 - day + 7) % 7 || 7; // días hasta próximo sábado
+    const target = new Date(svNow);
+    target.setDate(target.getDate() + daysToSat);
+    target.setHours(7, 0, 0, 0);
+    // Convertir a UTC para el timeout
+    const targetUTC = new Date(target.toLocaleString('en-US', { timeZone: 'America/El_Salvador' }));
+    targetUTC.setHours(targetUTC.getHours() + 6); // SV = UTC-6
+    return Math.max(targetUTC - now, 0);
+  };
+
+  setTimeout(function scheduleSabado() {
+    const { getRegistros, getTrabajadores, getRamas } = require('./store');
+    const st = waStatus();
+    if (st.status === 'ready') {
+      const now = new Date();
+      const svDate = now.toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' });
+      // Semana key = lunes anterior
+      const svDay = new Date(svDate + 'T12:00:00');
+      const mon = new Date(svDay);
+      mon.setDate(svDay.getDate() - 5); // sábado - 5 = lunes
+      const semanaKey = mon.toISOString().slice(0, 10);
+      const semanaLabel = `${mon.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} - ${svDay.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}`;
+      enviarRecordatorios({
+        trabajadores: getTrabajadores(),
+        registros: getRegistros(semanaKey),
+        ramas: getRamas(),
+        semanaLabel,
+      }).then(r => console.log('[whatsapp] Recordatorio sábado:', r));
+    } else {
+      console.log('[whatsapp] Sábado — no conectado, recordatorio omitido');
+    }
+    setTimeout(scheduleSabado, 7 * 24 * 60 * 60 * 1000); // repetir cada semana
+  }, msHastaSabado7am());
 });
