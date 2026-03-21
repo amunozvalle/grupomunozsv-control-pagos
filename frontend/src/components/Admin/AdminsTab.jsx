@@ -43,6 +43,7 @@ export default function AdminsTab({ ramas = [] }) {
   };
 
   return (
+    <>
     <div className="admin-grid">
       <section className="admin-panel">
         <div className="section-header">
@@ -111,5 +112,6 @@ export default function AdminsTab({ ramas = [] }) {
       </div>
       <WhatsappBotPanel ramas={ramas} />
     </div>
+    </>
   );
 }
