@@ -5,6 +5,7 @@ import SemanaTab from './components/Semana/SemanaTab';
 import TrabajadoresTab from './components/Trabajadores/TrabajadoresTab';
 import ReporteTab from './components/Reporte/ReporteTab';
 import AdminsTab from './components/Admin/AdminsTab';
+import CobrosTab from './components/Cobros/CobrosTab';
 import LoginPage from './components/Auth/LoginPage';
 import ImportarModal from './components/Importar/ImportarModal';
 import {
@@ -20,6 +21,7 @@ import { getSemanaKey } from './utils/week';
 const TABS = [
   { id: 'semana', label: 'Semana' },
   { id: 'trabajadores', label: 'Trabajadores' },
+  { id: 'cobros', label: 'Cobros' },
   { id: 'reporte', label: 'Reporte' },
   { id: 'admins', label: 'Admins' },
 ];
@@ -146,6 +148,8 @@ export default function App() {
             onRefresh={refresh}
           />
         )}
+
+        {activeTab === 'cobros' && <CobrosTab />}
 
         {activeTab === 'reporte' && (
           <ReporteTab

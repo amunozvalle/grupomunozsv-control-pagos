@@ -21,6 +21,7 @@ app.use('/api/trabajadores', requireAdmin, require('./routes/trabajadores'));
 app.use('/api/ramas', requireAdmin, require('./routes/ramas'));
 app.use('/api/registros', requireAdmin, require('./routes/registros'));
 app.use('/api/whatsapp', requireAdmin, require('./routes/whatsapp'));
+app.use('/api/cobros', requireAdmin, require('./routes/cobros'));
 app.use('/api/admin-users', requireAdmin, require('./routes/adminUsers'));
 
 // Backup manual desde el dashboard

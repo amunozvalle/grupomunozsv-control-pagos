@@ -91,6 +91,19 @@ const db = {
     save(_db);
   },
 
+  // ── Cobros ────────────────────────────────────────────────────────────────
+  getCobros() { return [...(_db.cobros || [])].sort((a, b) => b.fecha.localeCompare(a.fecha)); },
+  addCobro(cobro) {
+    if (!_db.cobros) _db.cobros = [];
+    _db.cobros.push(cobro);
+    save(_db);
+  },
+  deleteCobro(id) {
+    if (!_db.cobros) return;
+    _db.cobros = _db.cobros.filter(c => c.id !== id);
+    save(_db);
+  },
+
   // ── Registros ─────────────────────────────────────────────────────────────
   getRegistros(semana) {
     const week = _db.registros[semana] || {};
