@@ -12,6 +12,7 @@ import {
   getTrabajadores,
   getRamas,
   getRegistros,
+  getCobros,
   getSession,
   login,
   logout,
@@ -32,6 +33,7 @@ export default function App() {
   const [trabajadores, setTrabajadores] = useState([]);
   const [ramas, setRamas] = useState([]);
   const [registros, setRegistros] = useState([]);
+  const [cobros, setCobros] = useState([]);
   const [importarOpen, setImportarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
@@ -61,6 +63,11 @@ export default function App() {
     setRegistros(r);
   }, [semanaKey]);
 
+  const loadCobros = useCallback(async () => {
+    const c = await getCobros();
+    setCobros(c);
+  }, []);
+
   useEffect(() => {
     loadSession();
   }, [loadSession]);
@@ -68,21 +75,23 @@ export default function App() {
   useEffect(() => {
     if (!currentAdmin) return;
     setLoading(true);
-    Promise.all([loadBase(), loadRegistros()]).finally(() => setLoading(false));
+    Promise.all([loadBase(), loadRegistros(), loadCobros()]).finally(() => setLoading(false));
   }, [currentAdmin, loadBase, loadRegistros]);
 
   const refresh = useCallback(() => {
     loadBase();
     loadRegistros();
-  }, [loadBase, loadRegistros]);
+    loadCobros();
+  }, [loadBase, loadRegistros, loadCobros]);
 
   const refreshRegistros = useCallback(() => loadRegistros(), [loadRegistros]);
+  const refreshCobros = useCallback(() => loadCobros(), [loadCobros]);
 
   const handleLogin = async (credentials) => {
     const data = await login(credentials);
     setCurrentAdmin(data.admin);
     setLoading(true);
-    await Promise.all([loadBase(), loadRegistros()]);
+    await Promise.all([loadBase(), loadRegistros(), loadCobros()]);
     setLoading(false);
   };
 
@@ -133,10 +142,12 @@ export default function App() {
               trabajadores={trabajadores}
               ramas={ramas}
               registros={registros}
+              cobros={cobros}
               semanaKey={semanaKey}
               semanaOffset={semanaOffset}
               setSemanaOffset={setSemanaOffset}
               onRefresh={refreshRegistros}
+              onRefreshCobros={refreshCobros}
             />
           </>
         )}
@@ -149,7 +160,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'cobros' && <CobrosTab />}
+        {activeTab === 'cobros' && <CobrosTab cobros={cobros} onRefresh={refreshCobros} />}
 
         {activeTab === 'reporte' && (
           <ReporteTab

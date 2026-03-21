@@ -40,6 +40,8 @@ export const deleteRegistro = (semana, trabajadorId) => req('DELETE', `/registro
 export const parseWhatsapp = (text, semana) => req('POST', '/whatsapp/parse', { text, semana });
 export const applyWhatsapp = (semana, rows) => req('POST', '/whatsapp/apply', { semana, rows });
 
+export const getCobros = () => req('GET', '/cobros');
+
 export const getRegistrarLinks = (semana) => req('GET', `/registrar/links/${semana}`);
 export const getRegistrarPayload = (token) => req('GET', `/registrar/${token}`);
 export const saveRegistrarPayload = (token, data) => req('POST', `/registrar/${token}`, data);

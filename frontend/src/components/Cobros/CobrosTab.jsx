@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 function fmt(n) {
   return Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function CobrosTab() {
-  const [cobros, setCobros] = useState([]);
+export default function CobrosTab({ cobros = [], onRefresh }) {
   const [nombre, setNombre] = useState('');
   const [monto, setMonto] = useState('');
   const [notas, setNotas] = useState('');
@@ -14,13 +13,6 @@ export default function CobrosTab() {
   const [error, setError] = useState('');
   const [filtroFecha, setFiltroFecha] = useState('');
   const nombreRef = useRef(null);
-
-  const load = useCallback(async () => {
-    const res = await fetch('/api/cobros');
-    setCobros(await res.json());
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   async function guardar() {
     if (!nombre.trim() || !monto) return;
@@ -38,7 +30,7 @@ export default function CobrosTab() {
         setNombre('');
         setMonto('');
         setNotas('');
-        await load();
+        onRefresh?.();
         nombreRef.current?.focus();
       }
     } catch { setError('Error de red'); }
@@ -48,7 +40,7 @@ export default function CobrosTab() {
   async function eliminar(id, nombreCobro) {
     if (!confirm(`¿Eliminar cobro de ${nombreCobro}?`)) return;
     await fetch(`/api/cobros/${id}`, { method: 'DELETE' });
-    await load();
+    onRefresh?.();
   }
 
   const filtrados = filtroFecha ? cobros.filter(c => c.fecha === filtroFecha) : cobros;
