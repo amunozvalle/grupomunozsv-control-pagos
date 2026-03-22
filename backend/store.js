@@ -127,6 +127,25 @@ const db = {
       save(_db);
     }
   },
+
+  // Devuelve todos los registros de semanas que caen en year/month
+  getRegistrosMes(year, month) {
+    const result = [];
+    for (const [semana, workers] of Object.entries(_db.registros || {})) {
+      // semana = "YYYY-MM-DD" (lunes de la semana)
+      const d = new Date(semana + 'T12:00:00');
+      // incluir semanas que overlap con el mes
+      const semStart = d;
+      const semEnd = new Date(d); semEnd.setDate(d.getDate() + 5);
+      const mesStart = new Date(year, month - 1, 1);
+      const mesEnd = new Date(year, month, 0);
+      if (semEnd < mesStart || semStart > mesEnd) continue;
+      for (const [trabajador_id, data] of Object.entries(workers)) {
+        result.push({ semana, trabajador_id, ...data });
+      }
+    }
+    return result;
+  },
 };
 
 module.exports = db;
