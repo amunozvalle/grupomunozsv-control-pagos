@@ -16,8 +16,8 @@ function MovimientosList({ items, onAdd, onRemove, tipo }) {
   const [monto, setMonto] = useState('');
   const [fecha, setFecha] = useState(todaySV);
   const [desc, setDesc] = useState('');
-  const color = tipo === 'extra' ? 'var(--gold)' : 'var(--red)';
-  const label = tipo === 'extra' ? 'Pago Extra' : 'Anticipo';
+  const color = tipo === 'extra' ? 'var(--gold)' : tipo === 'reembolso' ? 'var(--blue)' : 'var(--red)';
+  const label = tipo === 'extra' ? 'Pago Extra' : tipo === 'reembolso' ? 'Reembolso' : 'Anticipo';
 
   function agregar() {
     if (!monto || isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) return;
@@ -93,6 +93,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
   const [dias, setDias] = useState({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 });
   const [extras, setExtras] = useState([]);
   const [anticipos, setAnticipos] = useState([]);
+  const [reembolsos, setReembolsos] = useState([]);
   const [notas, setNotas] = useState('');
   const [sueldo, setSueldo] = useState(String(trabajador?.sueldo || ''));
   const [nombre, setNombre] = useState(trabajador?.nombre || '');
@@ -118,10 +119,11 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
       } else {
         setAnticipos([]);
       }
+      setReembolsos(record.reembolsos || []);
       setNotas(record.notas || '');
     } else {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 });
-      setExtras([]); setAnticipos([]); setNotas('');
+      setExtras([]); setAnticipos([]); setReembolsos([]); setNotas('');
     }
   }, [record, trabajador, semanaKey]);
 
@@ -129,9 +131,10 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
   const sueldoNum = Number(sueldo) || 0;
   const totalExtra = extras.reduce((s, e) => s + e.monto, 0);
   const totalAnticipo = anticipos.reduce((s, a) => s + a.monto, 0);
+  const totalReembolso = reembolsos.reduce((s, r) => s + r.monto, 0);
   const preview = calcPago(
     { ...trabajador, sueldo: sueldoNum },
-    { dias, extra: totalExtra, anticipo: totalAnticipo }
+    { dias, extra: totalExtra + totalReembolso, anticipo: totalAnticipo }
   );
 
   const handleSave = async () => {
@@ -143,6 +146,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           dias,
           extras,
           anticipos,
+          reembolsos,
           // Mantener compatibilidad con campos legacy
           extra: totalExtra,
           anticipo: totalAnticipo,
@@ -233,6 +237,14 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
             onRemove={i => setAnticipos(prev => prev.filter((_, idx) => idx !== i))}
           />
 
+          {/* Reembolsos */}
+          <MovimientosList
+            tipo="reembolso"
+            items={reembolsos}
+            onAdd={item => setReembolsos(prev => [...prev, item])}
+            onRemove={i => setReembolsos(prev => prev.filter((_, idx) => idx !== i))}
+          />
+
           {/* Notas */}
           <div className="form-group">
             <label>Notas</label>
@@ -249,6 +261,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
               <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {totalDias} días × ${fmt(sueldoNum / 6)}/día
                 {totalExtra > 0 && ` + $${fmt(totalExtra)} extra`}
+                {totalReembolso > 0 && ` + $${fmt(totalReembolso)} reembolso`}
                 {totalAnticipo > 0 && ` − $${fmt(totalAnticipo)} anticipo`}
               </div>
               <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1rem', letterSpacing: '0.06em', marginTop: '0.25rem' }}>
