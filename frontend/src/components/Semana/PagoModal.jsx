@@ -17,7 +17,7 @@ function MovimientosList({ items, onAdd, onRemove, tipo }) {
   const [fecha, setFecha] = useState(todaySV);
   const [desc, setDesc] = useState('');
   const color = tipo === 'extra' ? 'var(--gold)' : 'var(--red)';
-  const label = tipo === 'extra' ? 'Extra' : 'Anticipo';
+  const label = tipo === 'extra' ? 'Pago Extra' : 'Anticipo';
 
   function agregar() {
     if (!monto || isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) return;
