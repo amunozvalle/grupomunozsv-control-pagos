@@ -147,8 +147,8 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           extras,
           anticipos,
           reembolsos,
-          // Mantener compatibilidad con campos legacy
-          extra: totalExtra,
+          // Campos legacy — extra incluye reembolsos para que calcPago sea correcto en tabla
+          extra: totalExtra + totalReembolso,
           anticipo: totalAnticipo,
           notas,
           pagado: record?.pagado,

@@ -19,7 +19,7 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
       extras: rec.extras || [],
       anticipos: rec.anticipos || [],
       reembolsos: rec.reembolsos || [],
-      extra: Number(rec.extra) || 0,
+      extra: Number(rec.extra) || 0, // ya incluye reembolsos del guardado original
       anticipo: Number(rec.anticipo) || 0,
       notas: rec.notas || '',
       pagado: !rec.pagado,
