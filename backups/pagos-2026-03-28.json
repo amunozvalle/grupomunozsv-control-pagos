@@ -1059,7 +1059,12 @@
         },
         "extra": 0,
         "anticipo": 0,
-        "notas": ""
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:35:06.779Z"
       },
       "JFMeyYCFhx": {
         "dias": {
@@ -1093,7 +1098,9 @@
         "reembolsos": [],
         "extra": 0,
         "anticipo": 0,
-        "notas": ""
+        "notas": "",
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:48:21.722Z"
       },
       "5-46P7wfJ2": {
         "dias": {
@@ -1124,7 +1131,12 @@
         },
         "extra": 0,
         "anticipo": 0,
-        "notas": ""
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:01:37.049Z"
       },
       "tjNyx7MZru": {
         "dias": {
@@ -1155,7 +1167,12 @@
         },
         "extra": 0,
         "anticipo": 0,
-        "notas": ""
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:29:53.809Z"
       },
       "0lerAz4umk": {
         "dias": {
@@ -1186,7 +1203,12 @@
         },
         "extra": 107.52,
         "anticipo": 0,
-        "notas": "$107.52 que me debe de compras del viernes en la tarde"
+        "notas": "$107.52 que me debe de compras del viernes en la tarde",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:37:04.047Z"
       },
       "kUKcHOFjqx": {
         "dias": {
@@ -1217,7 +1239,12 @@
         },
         "extra": 0,
         "anticipo": 0,
-        "notas": ""
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:31:39.390Z"
       },
       "18Vz-lwAHg": {
         "dias": {
@@ -1248,7 +1275,12 @@
         },
         "extra": 0,
         "anticipo": 0,
-        "notas": ""
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:04:25.599Z"
       },
       "9uLkB_eNRP": {
         "dias": {
@@ -1267,6 +1299,138 @@
         "reembolsos": [],
         "pagado": true,
         "pagado_at": "2026-03-28T16:45:50.217Z"
+      },
+      "CIHnchHoHL": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 1,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:13:16.787Z"
+      },
+      "C88ogzZcs6": {
+        "dias": {
+          "L": 0,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 0.5,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:33:02.888Z"
+      },
+      "TibwSJH8i1": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 1,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:32:22.021Z"
+      },
+      "q0ujpxrwzZ": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 1,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 105,
+        "notas": "",
+        "extras": [],
+        "anticipos": [
+          {
+            "monto": 105,
+            "fecha": "2026-03-23",
+            "descripcion": ""
+          }
+        ],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:34:12.974Z"
+      },
+      "pon8YMyEZ_": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 0.5,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "Serian dos horas extra, y la tarde de ahora que no se hasta que horas trabaremos",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:42:02.437Z"
+      },
+      "J4HXWYtYFN": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 1,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:42:41.803Z"
+      },
+      "eeM05mYGUb": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 1,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-03-28T17:47:12.604Z"
       }
     }
   },
