@@ -105,21 +105,12 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
     if (record) {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0, ...(record.dias || {}) });
       // Compatibilidad con registros viejos (extra/anticipo como número)
-      if (record.extras) {
-        setExtras(record.extras);
-      } else if (record.extra) {
-        setExtras([{ monto: record.extra, fecha: semanaKey, descripcion: '' }]);
-      } else {
-        setExtras([]);
-      }
-      if (record.anticipos) {
-        setAnticipos(record.anticipos);
-      } else if (record.anticipo) {
-        setAnticipos([{ monto: record.anticipo, fecha: semanaKey, descripcion: '' }]);
-      } else {
-        setAnticipos([]);
-      }
-      setReembolsos(record.reembolsos || []);
+      // Usar arrays si existen y tienen items; si no, convertir campos legacy a array
+      const extrasArr = record.extras?.length ? record.extras : (record.extra ? [{ monto: record.extra, fecha: semanaKey, descripcion: '' }] : []);
+      const anticiposArr = record.anticipos?.length ? record.anticipos : (record.anticipo ? [{ monto: record.anticipo, fecha: semanaKey, descripcion: '' }] : []);
+      setExtras(extrasArr);
+      setAnticipos(anticiposArr);
+      setReembolsos(record.reembolsos?.length ? record.reembolsos : []);
       setNotas(record.notas || '');
     } else {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 });

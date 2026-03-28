@@ -19,9 +19,19 @@ export default function RecordatorioModal({ trabajadores, registros, semanaKey, 
   const conAnticipo = trabajadores
     .filter((t) => {
       const rec = recordMap[t.id];
-      return rec && (rec.anticipo || 0) > 0;
+      if (!rec) return false;
+      const totalAnticipo = rec.anticipos?.length
+        ? rec.anticipos.reduce((s, a) => s + a.monto, 0)
+        : (rec.anticipo || 0);
+      return totalAnticipo > 0;
     })
-    .map((t) => ({ ...t, anticipo: recordMap[t.id].anticipo }));
+    .map((t) => {
+      const rec = recordMap[t.id];
+      const totalAnticipo = rec.anticipos?.length
+        ? rec.anticipos.reduce((s, a) => s + a.monto, 0)
+        : (rec.anticipo || 0);
+      return { ...t, anticipo: totalAnticipo };
+    });
 
   const semanaLabel = formatSemanaWhatsappNatural(semanaKey);
 

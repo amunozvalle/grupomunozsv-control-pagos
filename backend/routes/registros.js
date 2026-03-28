@@ -27,13 +27,14 @@ router.post('/:semana', (req, res) => {
   if (!trabajador_id) return res.status(400).json({ error: 'trabajador_id requerido' });
   const fields = {
     dias: dias || {},
-    extras: extras || [],
-    anticipos: anticipos || [],
-    reembolsos: reembolsos || [],
     extra: Number(extra) || 0,
     anticipo: Number(anticipo) || 0,
     notas: notas || '',
   };
+  // Solo incluir arrays si vienen en el body para no sobrescribir con vacíos
+  if (extras !== undefined) fields.extras = extras;
+  if (anticipos !== undefined) fields.anticipos = anticipos;
+  if (reembolsos !== undefined) fields.reembolsos = reembolsos;
   if (pagado !== undefined) {
     fields.pagado = Boolean(pagado);
     fields.pagado_at = pagado ? (pagado_at || new Date().toISOString()) : null;
