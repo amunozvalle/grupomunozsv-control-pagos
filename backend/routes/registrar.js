@@ -87,13 +87,16 @@ router.post('/:token', (req, res) => {
       return res.status(404).json({ error: 'Trabajador no encontrado' });
     }
 
-    const { dias, extra, anticipo, notas } = req.body;
-    const row = db.upsertRegistro(semana, trabajador.id, {
+    const { dias, extras, anticipos, extra, anticipo, notas } = req.body;
+    const fields = {
       dias: { ...EMPTY_DIAS, ...(dias || {}) },
       extra: Number(extra) || 0,
       anticipo: Number(anticipo) || 0,
       notas: (notas || '').trim(),
-    });
+    };
+    if (extras !== undefined) fields.extras = extras;
+    if (anticipos !== undefined) fields.anticipos = anticipos;
+    const row = db.upsertRegistro(semana, trabajador.id, fields);
 
     return res.json({
       ok: true,
