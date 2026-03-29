@@ -1111,10 +1111,16 @@
           "V": 1,
           "S": 1
         },
-        "extra": 0,
+        "extra": 5,
         "anticipo": 0,
         "notas": "1 hora",
-        "extras": [],
+        "extras": [
+          {
+            "monto": 5,
+            "fecha": "2026-03-28",
+            "descripcion": "hora extra"
+          }
+        ],
         "anticipos": [],
         "reembolsos": [],
         "pagado": true,
@@ -1248,12 +1254,12 @@
       },
       "18Vz-lwAHg": {
         "dias": {
-          "L": 1,
-          "M": 1,
-          "X": 1,
-          "J": 1,
-          "V": 1,
-          "S": 1
+          "L": 0.5,
+          "M": 0.5,
+          "X": 0.5,
+          "J": 0.5,
+          "V": 0.5,
+          "S": 0.5
         },
         "extra": 0,
         "anticipo": 0,
