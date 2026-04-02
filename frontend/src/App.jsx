@@ -78,6 +78,17 @@ export default function App() {
     Promise.all([loadBase(), loadRegistros(), loadCobros()]).finally(() => setLoading(false));
   }, [currentAdmin, loadBase, loadRegistros]);
 
+  // Auto-refresh cada 30 segundos
+  useEffect(() => {
+    if (!currentAdmin) return;
+    const interval = setInterval(() => {
+      loadBase();
+      loadRegistros();
+      loadCobros();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [currentAdmin, loadBase, loadRegistros, loadCobros]);
+
   const refresh = useCallback(() => {
     loadBase();
     loadRegistros();
