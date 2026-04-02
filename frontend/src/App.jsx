@@ -146,7 +146,7 @@ export default function App() {
               semanaKey={semanaKey}
               semanaOffset={semanaOffset}
               setSemanaOffset={setSemanaOffset}
-              onRefresh={refreshRegistros}
+              onRefresh={refresh}
               onRefreshCobros={refreshCobros}
             />
           </>
