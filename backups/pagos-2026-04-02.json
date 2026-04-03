@@ -49,7 +49,7 @@
       "id": "QaUm7lc6UX",
       "nombre": "Cheyo",
       "rama": "cs7jEDtT9O",
-      "sueldo": 120,
+      "sueldo": 132,
       "telefono": "+503 7472 0237"
     },
     {
@@ -63,14 +63,14 @@
       "id": "eeM05mYGUb",
       "nombre": "Marcos",
       "rama": "cs7jEDtT9O",
-      "sueldo": 120,
+      "sueldo": 132,
       "telefono": "+503 6311 4992"
     },
     {
       "id": "pon8YMyEZ_",
       "nombre": "Yovany",
       "rama": "cs7jEDtT9O",
-      "sueldo": 100,
+      "sueldo": 115,
       "telefono": "+503 7007 0778"
     },
     {
@@ -1445,7 +1445,7 @@
           "L": 1,
           "M": 1,
           "X": 1,
-          "J": 0,
+          "J": 1,
           "V": 0,
           "S": 0
         },
@@ -1478,7 +1478,7 @@
           "L": 1,
           "M": 1,
           "X": 1,
-          "J": 0,
+          "J": 0.5,
           "V": 0,
           "S": 0
         },
@@ -1505,7 +1505,9 @@
         "notas": "",
         "extras": [],
         "anticipos": [],
-        "reembolsos": []
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:20:45.315Z"
       },
       "lCtciuYcJv": {
         "dias": {
@@ -1538,7 +1540,10 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:13:23.038Z"
       },
       "wXXr7U51J1": {
         "dias": {
@@ -1553,7 +1558,10 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:29:20.118Z"
       },
       "TibwSJH8i1": {
         "dias": {
@@ -1568,7 +1576,10 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:30:30.046Z"
       },
       "5-46P7wfJ2": {
         "dias": {
@@ -1635,14 +1646,17 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:21:17.985Z"
       },
       "18Vz-lwAHg": {
         "dias": {
           "L": 1,
           "M": 1,
           "X": 1,
-          "J": 0,
+          "J": 1,
           "V": 0,
           "S": 0
         },
@@ -1651,7 +1665,9 @@
         "notas": "",
         "extras": [],
         "anticipos": [],
-        "reembolsos": []
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:29:22.983Z"
       },
       "JFMeyYCFhx": {
         "dias": {
@@ -1681,7 +1697,10 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:16:23.267Z"
       },
       "0lerAz4umk": {
         "dias": {
@@ -1696,7 +1715,10 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:39:10.894Z"
       },
       "J4HXWYtYFN": {
         "dias": {
@@ -1711,7 +1733,146 @@
         "anticipo": 0,
         "notas": "",
         "extras": [],
-        "anticipos": []
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:23:33.590Z"
+      },
+      "q0ujpxrwzZ": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 0.5,
+          "V": 0,
+          "S": 0
+        },
+        "extra": 25,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [
+          {
+            "monto": 25,
+            "descripcion": ""
+          }
+        ],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:28:43.076Z"
+      },
+      "QaUm7lc6UX": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 0,
+          "V": 0,
+          "S": 0
+        },
+        "extra": 10,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [
+          {
+            "monto": 10,
+            "descripcion": "Extra del viaje a ss del martes"
+          }
+        ],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T18:37:56.011Z"
+      },
+      "C88ogzZcs6": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 0,
+          "V": 0,
+          "S": 0
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T17:52:19.525Z"
+      },
+      "eeM05mYGUb": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 0,
+          "S": 0
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T18:01:43.233Z"
+      },
+      "pon8YMyEZ_": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 0.5,
+          "S": 0
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "1/2 pagado del sabado pasado",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T18:15:17.357Z"
+      },
+      "9uLkB_eNRP": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 0,
+          "V": 0,
+          "S": 0
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T19:10:55.640Z"
+      },
+      "MFkwIb5IiL": {
+        "dias": {
+          "L": 1,
+          "M": 1,
+          "X": 1,
+          "J": 1,
+          "V": 1,
+          "S": 1
+        },
+        "extra": 0,
+        "anticipo": 0,
+        "notas": "adelantado 3 dias",
+        "extras": [],
+        "anticipos": [],
+        "reembolsos": [],
+        "pagado": true,
+        "pagado_at": "2026-04-02T19:12:19.072Z"
       }
     }
   },
@@ -1771,6 +1932,22 @@
       "fecha": "2026-03-21",
       "notas": "Vuelto de $600 / revisar proveedora $29 gas $32",
       "creadoEn": "2026-03-21T18:58:18.249Z"
+    },
+    {
+      "id": "1775157276364-d3zn",
+      "nombre": "BEYLI",
+      "monto": 300,
+      "fecha": "2026-04-02",
+      "notas": "Transferencia de Mario",
+      "creadoEn": "2026-04-02T19:14:36.364Z"
+    },
+    {
+      "id": "1775157358667-fdai",
+      "nombre": "ALEX",
+      "monto": 820,
+      "fecha": "2026-04-01",
+      "notas": "Transferencia de Mario",
+      "creadoEn": "2026-04-02T19:15:58.667Z"
     }
   ]
 }
