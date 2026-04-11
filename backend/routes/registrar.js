@@ -16,16 +16,21 @@ function withBaseUrl(req, token) {
 }
 
 function getSemanaActualKey() {
-  const today = new Date();
+  // Use El Salvador timezone (UTC-6) to match the admin dashboard
+  const svDate = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' });
+  const today = new Date(svDate + 'T12:00:00');
   const dow = today.getDay();
   const diff = dow === 0 ? -6 : 1 - dow;
   const monday = new Date(today);
   monday.setDate(today.getDate() + diff);
-  return monday.toISOString().slice(0, 10);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
-function resolveSemana(payload) {
-  return payload.semana || getSemanaActualKey();
+function resolveSemana(payload, bodySemana) {
+  return payload.semana || bodySemana || getSemanaActualKey();
 }
 
 function buildRow(req, semana, trabajador) {
@@ -80,7 +85,9 @@ router.get('/:token', (req, res) => {
 router.post('/:token', (req, res) => {
   try {
     const payload = verifyRegistrarToken(req.params.token);
-    const semana = resolveSemana(payload);
+    // For permanent tokens, prefer the semana the frontend saw (from GET response)
+    // so GET and POST always use the exact same week key
+    const semana = payload.semana || req.body.semana || getSemanaActualKey();
     const trabajador = db.getTrabajador(payload.trabajadorId);
 
     if (!trabajador) {

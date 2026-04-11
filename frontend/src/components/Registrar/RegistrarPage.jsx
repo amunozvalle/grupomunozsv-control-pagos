@@ -148,6 +148,7 @@ export default function RegistrarPage() {
     setError('');
     try {
       await saveRegistrarPayload(token, {
+        semana,
         dias,
         extras,
         anticipos,
