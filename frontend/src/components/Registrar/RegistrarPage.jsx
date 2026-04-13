@@ -13,6 +13,10 @@ function getTokenFromPath() {
   return parts[1] || '';
 }
 
+function isWhatsAppBrowser() {
+  return /WhatsApp/i.test(navigator.userAgent);
+}
+
 function MovimientoRow({ item, color, onRemove, index }) {
   return (
     <div style={{
@@ -157,8 +161,8 @@ export default function RegistrarPage() {
         notas,
       });
       setSuccess('Tu hoja de trabajo semanal quedo guardada. La nomina ya se actualizo en el sistema.');
-    } catch {
-      setError('No se pudo guardar la hoja de trabajo. Intenta de nuevo en unos segundos.');
+    } catch (err) {
+      setError(`Error al guardar: ${err.message || 'Intenta de nuevo. Si el problema persiste, abre el link en Chrome o Safari.'}`);
     } finally {
       setSaving(false);
     }
@@ -170,7 +174,16 @@ export default function RegistrarPage() {
     return (
       <div className="registrar-shell">
         <div className="registrar-card">
-          <div className="alert alert-danger">{error}</div>
+          <div className="registrar-eyebrow">Grupo Munoz</div>
+          <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>{error}</div>
+          {isWhatsAppBrowser() && (
+            <div style={{ background: 'rgba(255,200,0,0.12)', border: '1px solid rgba(255,200,0,0.3)', borderRadius: 8, padding: '0.65rem 0.85rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#ffe066' }}>
+              ⚠️ Intenta abrir este link en <strong>Chrome</strong> o <strong>Safari</strong> (toca ⋮ → Abrir en Chrome).
+            </div>
+          )}
+          <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => window.location.reload()}>
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -182,6 +195,12 @@ export default function RegistrarPage() {
         <div className="registrar-eyebrow">Grupo Munoz</div>
         <h1 className="registrar-title">Hoja de trabajo semanal</h1>
         <p className="registrar-subtitle">{trabajador?.nombre} · {formatSemana(semana)}</p>
+
+        {isWhatsAppBrowser() && (
+          <div style={{ background: 'rgba(255,200,0,0.12)', border: '1px solid rgba(255,200,0,0.3)', borderRadius: 8, padding: '0.65rem 0.85rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#ffe066' }}>
+            ⚠️ Estas usando el navegador de WhatsApp. Si tienes problemas guardando, toca los tres puntos (⋮) y selecciona <strong>"Abrir en Chrome"</strong> o <strong>"Abrir en Safari"</strong>.
+          </div>
+        )}
 
         {error && <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>{error}</div>}
         {success && <div className="alert alert-success" style={{ marginBottom: '1rem' }}>{success}</div>}
