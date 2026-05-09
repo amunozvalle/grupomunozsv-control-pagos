@@ -115,7 +115,18 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       {/* Header */}
       <div className="section-header">
         <span className="section-title">Reporte</span>
-        <button className="btn btn-outline btn-sm no-print" onClick={() => window.print()}>🖨 Imprimir</button>
+        <button className="btn btn-outline btn-sm no-print" onClick={() => {
+          const orig = document.title;
+          if (filtro === 'dia') {
+            document.title = `Nomina_${diaSeleccionado}`;
+          } else if (filtro === 'semana') {
+            document.title = `Nomina_Semana_${semanaKey}`;
+          } else {
+            document.title = `Nomina_${MESES[mesMonth - 1]}_${mesYear}`;
+          }
+          window.print();
+          setTimeout(() => { document.title = orig; }, 1000);
+        }}>🖨 Imprimir</button>
       </div>
 
       {/* Barra de filtros */}
