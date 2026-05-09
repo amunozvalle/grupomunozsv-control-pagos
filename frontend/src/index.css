@@ -731,6 +731,7 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
 
 @media print {
   @page {
+    size: letter portrait;
     margin: 0.5cm;
   }
 
@@ -769,22 +770,29 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
   }
 
   table {
-    font-size: 9px !important;
+    font-size: 8px !important;
     width: 100% !important;
     background: #fff !important;
+    table-layout: fixed;
   }
 
   table th {
-    padding: 3px 5px !important;
+    padding: 2px 4px !important;
     background: #f0f0f0 !important;
     color: #000 !important;
     border-bottom: 2px solid #999 !important;
+    font-size: 7px !important;
+    white-space: nowrap;
   }
 
   table td {
-    padding: 3px 5px !important;
+    padding: 2px 4px !important;
     color: #000 !important;
     border-bottom: 1px solid #ddd !important;
+    font-size: 8px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   table tfoot td {
