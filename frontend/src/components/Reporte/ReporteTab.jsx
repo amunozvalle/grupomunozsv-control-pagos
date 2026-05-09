@@ -22,6 +22,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const [registrosMes, setRegistrosMes] = useState([]);
   const [loadingMes, setLoadingMes] = useState(false);
   const [filtroRama, setFiltroRama] = useState('todas');
+  const [montoEntregado, setMontoEntregado] = useState('');
 
   const ramaMap = Object.fromEntries(ramas.map((r) => [r.id, r]));
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
@@ -246,6 +247,53 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          {/* Monto entregado y sobrante */}
+          <div className="print-sobrante" style={{
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '1rem', marginTop: '1rem',
+            display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>Monto entregado:</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)', fontSize: '0.9rem' }}>$</span>
+                <input
+                  className="form-input no-print"
+                  type="number" min="0" step="0.01"
+                  value={montoEntregado}
+                  onChange={e => setMontoEntregado(e.target.value)}
+                  placeholder="0.00"
+                  style={{ paddingLeft: '1.2rem', width: 130, fontSize: '0.95rem', fontFamily: 'DM Mono, monospace' }}
+                />
+                {montoEntregado && (
+                  <span className="print-only" style={{ display: 'none', fontFamily: 'DM Mono, monospace', fontSize: '1.1rem', fontWeight: 700 }}>
+                    ${fmt(Number(montoEntregado))}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
+              Total nómina: <strong style={{ color: 'var(--gold)', fontFamily: 'DM Mono, monospace' }}>${fmt(total)}</strong>
+            </div>
+            {montoEntregado && Number(montoEntregado) > 0 && (
+              <div style={{
+                marginLeft: 'auto', background: Number(montoEntregado) >= total ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                border: `1px solid ${Number(montoEntregado) >= total ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                borderRadius: 8, padding: '0.5rem 1rem', textAlign: 'right',
+              }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {Number(montoEntregado) >= total ? 'Sobrante' : 'Faltante'}
+                </div>
+                <div style={{
+                  fontFamily: 'DM Mono, monospace', fontSize: '1.3rem', fontWeight: 700,
+                  color: Number(montoEntregado) >= total ? 'var(--green)' : 'var(--red)',
+                }}>
+                  ${fmt(Math.abs(Number(montoEntregado) - total))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Resumen por rama */}

@@ -730,9 +730,17 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
 }
 
 @media print {
+  @page {
+    size: landscape;
+    margin: 0.5cm;
+  }
+
   body {
     background: #fff;
     color: #000;
+    font-size: 10px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   header,
@@ -744,6 +752,27 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
   .container {
     max-width: none;
     padding: 0;
+  }
+
+  table {
+    font-size: 9px !important;
+    width: 100% !important;
+  }
+
+  table th, table td {
+    padding: 3px 5px !important;
+  }
+
+  .table-wrap {
+    overflow: visible !important;
+  }
+
+  .section-header {
+    margin-bottom: 0.3rem !important;
+  }
+
+  .section-title {
+    font-size: 14px !important;
   }
 
   .report-card,
@@ -758,6 +787,22 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
   .report-row-label,
   .section-title {
     color: #000 !important;
+  }
+
+  .badge {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
+  }
+
+  .print-sobrante {
+    border: 2px solid #000 !important;
+    padding: 8px !important;
+    margin-top: 8px !important;
+    page-break-inside: avoid;
+  }
+
+  .print-only {
+    display: inline !important;
   }
 }
 
