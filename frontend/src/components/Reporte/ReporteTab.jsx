@@ -257,7 +257,6 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.82rem', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>Monto entregado:</label>
-              <span className="no-print" style={{ color: 'var(--text-dim)', fontSize: '0.9rem' }}>$</span>
               <input
                 className="form-input no-print"
                 type="number" min="0" step="0.01"
@@ -266,11 +265,9 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                 placeholder="0.00"
                 style={{ width: 120, fontSize: '0.95rem', fontFamily: 'DM Mono, monospace' }}
               />
-              {montoEntregado && (
-                <span className="print-only" style={{ display: 'none', fontFamily: 'DM Mono, monospace', fontSize: '1.1rem', fontWeight: 700 }}>
-                  ${fmt(Number(montoEntregado))}
-                </span>
-              )}
+              <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '1rem', fontWeight: 700 }}>
+                {montoEntregado ? `$${fmt(Number(montoEntregado))}` : ''}
+              </span>
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
               Total nómina: <strong style={{ color: 'var(--gold)', fontFamily: 'DM Mono, monospace' }}>${fmt(total)}</strong>

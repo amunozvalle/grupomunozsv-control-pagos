@@ -847,14 +847,6 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
   td[style*="monospace"] {
     color: #000 !important;
   }
-
-  .filter-bar, .filter-chip, .week-nav, select.form-input {
-    display: none !important;
-  }
-
-  .print-only {
-    display: inline !important;
-  }
 }
 
 @media (max-width: 640px) {
