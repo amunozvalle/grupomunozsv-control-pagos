@@ -4,6 +4,7 @@ import SummaryCards from './components/SummaryCards';
 import SemanaTab from './components/Semana/SemanaTab';
 import TrabajadoresTab from './components/Trabajadores/TrabajadoresTab';
 import ReporteTab from './components/Reporte/ReporteTab';
+import ReporteAnualTab from './components/Reporte/ReporteAnualTab';
 import AdminsTab from './components/Admin/AdminsTab';
 import CobrosTab from './components/Cobros/CobrosTab';
 import LoginPage from './components/Auth/LoginPage';
@@ -24,6 +25,7 @@ const TABS = [
   { id: 'trabajadores', label: 'Trabajadores' },
   { id: 'cobros', label: 'Cobros' },
   { id: 'reporte', label: 'Reporte' },
+  { id: 'anual', label: 'Anual' },
   { id: 'admins', label: 'Admins' },
 ];
 
@@ -181,6 +183,13 @@ export default function App() {
             semanaKey={semanaKey}
             semanaOffset={semanaOffset}
             setSemanaOffset={setSemanaOffset}
+          />
+        )}
+
+        {activeTab === 'anual' && (
+          <ReporteAnualTab
+            trabajadores={trabajadores}
+            ramas={ramas}
           />
         )}
 

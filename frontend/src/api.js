@@ -35,6 +35,7 @@ export const deleteRama = (id) => req('DELETE', `/ramas/${id}`);
 
 export const getRegistros = (semana) => req('GET', `/registros/${semana}`);
 export const getRegistrosMes = (year, month) => req('GET', `/registros/mes/${year}/${month}`);
+export const getRegistrosAnual = (year) => req('GET', `/registros/anual/${year}`);
 export const upsertRegistro = (semana, data) => req('POST', `/registros/${semana}`, data);
 export const deleteRegistro = (semana, trabajadorId) => req('DELETE', `/registros/${semana}/${trabajadorId}`);
 

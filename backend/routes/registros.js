@@ -10,6 +10,13 @@ router.get('/mes/:year/:month', (req, res) => {
   res.json(result);
 });
 
+// GET /api/registros/anual/:year — todos los registros del año agrupados por mes
+router.get('/anual/:year', (req, res) => {
+  const year = parseInt(req.params.year);
+  const result = db.getRegistrosAnual(year);
+  res.json(result);
+});
+
 // GET /api/registros/:semana
 router.get('/:semana', (req, res) => {
   res.json(db.getRegistros(req.params.semana));

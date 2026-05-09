@@ -146,6 +146,28 @@ const db = {
     }
     return result;
   },
+
+  // Devuelve todos los registros del año agrupados por mes
+  getRegistrosAnual(year) {
+    const result = {};
+    for (let month = 1; month <= 12; month++) {
+      result[month] = [];
+    }
+    for (const [semana, workers] of Object.entries(_db.registros || {})) {
+      const d = new Date(semana + 'T12:00:00');
+      const semStart = d;
+      const semEnd = new Date(d); semEnd.setDate(d.getDate() + 5);
+      for (let month = 1; month <= 12; month++) {
+        const mesStart = new Date(year, month - 1, 1);
+        const mesEnd = new Date(year, month, 0);
+        if (semEnd < mesStart || semStart > mesEnd) continue;
+        for (const [trabajador_id, data] of Object.entries(workers)) {
+          result[month].push({ semana, trabajador_id, ...data });
+        }
+      }
+    }
+    return result;
+  },
 };
 
 module.exports = db;
