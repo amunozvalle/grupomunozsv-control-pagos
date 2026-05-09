@@ -105,12 +105,13 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
     if (record) {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0, ...(record.dias || {}) });
       // Compatibilidad con registros viejos (extra/anticipo como número)
-      // Usar arrays si existen y tienen items; si no, convertir campos legacy a array
-      const extrasArr = record.extras?.length ? record.extras : (record.extra ? [{ monto: record.extra, fecha: semanaKey, descripcion: '' }] : []);
-      const anticiposArr = record.anticipos?.length ? record.anticipos : (record.anticipo ? [{ monto: record.anticipo, fecha: semanaKey, descripcion: '' }] : []);
+      // Usar arrays si existen (incluso vacíos); si no, convertir campos legacy a array
+      const extrasArr = Array.isArray(record.extras) ? record.extras : (record.extra ? [{ monto: record.extra, fecha: semanaKey, descripcion: '' }] : []);
+      const anticiposArr = Array.isArray(record.anticipos) ? record.anticipos : (record.anticipo ? [{ monto: record.anticipo, fecha: semanaKey, descripcion: '' }] : []);
+      const reembolsosArr = Array.isArray(record.reembolsos) ? record.reembolsos : (record.reembolso ? [{ monto: record.reembolso, fecha: semanaKey, descripcion: '' }] : []);
       setExtras(extrasArr);
       setAnticipos(anticiposArr);
-      setReembolsos(record.reembolsos?.length ? record.reembolsos : []);
+      setReembolsos(reembolsosArr);
       setNotas(record.notas || '');
     } else {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 });

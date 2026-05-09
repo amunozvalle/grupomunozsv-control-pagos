@@ -28,7 +28,7 @@ router.post('/:semana', (req, res) => {
   const {
     trabajador_id, dias,
     extras, anticipos, reembolsos,
-    extra, anticipo,
+    extra, anticipo, reembolso,
     notas, pagado, pagado_at,
   } = req.body;
   if (!trabajador_id) return res.status(400).json({ error: 'trabajador_id requerido' });
@@ -36,6 +36,7 @@ router.post('/:semana', (req, res) => {
     dias: dias || {},
     extra: Number(extra) || 0,
     anticipo: Number(anticipo) || 0,
+    reembolso: Number(reembolso) || 0,
     notas: notas || '',
   };
   // Solo incluir arrays si vienen en el body para no sobrescribir con vacíos
