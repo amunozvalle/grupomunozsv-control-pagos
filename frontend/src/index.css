@@ -731,7 +731,7 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
 
 @media print {
   @page {
-    size: landscape;
+    size: portrait;
     margin: 0.5cm;
   }
 
