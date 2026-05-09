@@ -100,6 +100,18 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
 
   return (
     <>
+      {/* Print header con fecha — solo visible al imprimir */}
+      <div className="print-header" style={{ display: 'none', marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: '16px', fontWeight: 700, textAlign: 'center' }}>
+          GRUPO MUÑOZ — Control de Pagos
+        </div>
+        <div style={{ fontSize: '13px', textAlign: 'center', marginTop: '2px', color: '#444' }}>
+          {filtro === 'dia' && `Nómina del día ${new Date(diaSeleccionado + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}`}
+          {filtro === 'semana' && `Nómina Semana ${formatSemana(semanaKey)} ${new Date(semanaKey + 'T12:00:00').getFullYear()}`}
+          {filtro === 'mes' && `Nómina ${MESES[mesMonth - 1]} ${mesYear}`}
+        </div>
+      </div>
+
       {/* Header */}
       <div className="section-header">
         <span className="section-title">Reporte</span>
