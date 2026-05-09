@@ -292,7 +292,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           </div>
 
           {/* Resumen por rama */}
-          <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginTop: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginTop: '1.5rem' }}>
             {ramas.map(rama => {
               const sub = filas.filter(f => f.t.rama === rama.id);
               if (sub.length === 0) return null;
