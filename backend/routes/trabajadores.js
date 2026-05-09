@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { nombre, rama, sueldo, telefono } = req.body;
+  const { nombre, rama, sueldo, telefono, activo } = req.body;
   if (!nombre || !rama) return res.status(400).json({ error: 'nombre y rama requeridos' });
   const t = {
     id: nanoid(10),
@@ -16,18 +16,20 @@ router.post('/', (req, res) => {
     rama,
     sueldo: Number(sueldo) || 0,
     telefono: typeof telefono === 'string' ? telefono.trim() : '',
+    activo: activo !== undefined ? Boolean(activo) : true,
   };
   db.addTrabajador(t);
   res.json(t);
 });
 
 router.put('/:id', (req, res) => {
-  const { nombre, rama, sueldo, telefono } = req.body;
+  const { nombre, rama, sueldo, telefono, activo } = req.body;
   const fields = {};
   if (nombre !== undefined) fields.nombre = nombre.trim();
   if (rama !== undefined) fields.rama = rama;
   if (sueldo !== undefined) fields.sueldo = Number(sueldo) || 0;
   if (telefono !== undefined) fields.telefono = typeof telefono === 'string' ? telefono.trim() : '';
+  if (activo !== undefined) fields.activo = Boolean(activo);
   db.updateTrabajador(req.params.id, fields);
   res.json(db.getTrabajador(req.params.id));
 });
