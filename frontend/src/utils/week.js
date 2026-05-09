@@ -54,13 +54,15 @@ export function calcPago(trabajador, record) {
   if (!record) return 0;
   const dias = Object.values(record.dias || {}).reduce((s, v) => s + v, 0);
   const diario = (trabajador?.sueldo || 0) / 6;
-  // Usar arrays si existen, si no usar campos legacy
-  const extra = record.extras?.length
+  // Usar arrays si existen (incluso vacíos), si no usar campos legacy
+  const extra = Array.isArray(record.extras)
     ? record.extras.reduce((s, e) => s + e.monto, 0)
     : (record.extra || 0);
-  const anticipo = record.anticipos?.length
+  const anticipo = Array.isArray(record.anticipos)
     ? record.anticipos.reduce((s, a) => s + a.monto, 0)
     : (record.anticipo || 0);
-  const reembolso = (record.reembolsos || []).reduce((s, r) => s + r.monto, 0);
+  const reembolso = Array.isArray(record.reembolsos)
+    ? record.reembolsos.reduce((s, r) => s + r.monto, 0)
+    : (record.reembolso || 0);
   return dias * diario + extra + reembolso - anticipo;
 }

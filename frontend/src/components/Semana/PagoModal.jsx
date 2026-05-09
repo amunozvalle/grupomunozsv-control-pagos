@@ -125,7 +125,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
   const totalReembolso = reembolsos.reduce((s, r) => s + r.monto, 0);
   const preview = calcPago(
     { ...trabajador, sueldo: sueldoNum },
-    { dias, extra: totalExtra + totalReembolso, anticipo: totalAnticipo }
+    { dias, extras, anticipos, reembolsos }
   );
 
   const handleSave = async () => {
@@ -138,9 +138,10 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           extras,
           anticipos,
           reembolsos,
-          // Campos legacy — extra incluye reembolsos para que calcPago sea correcto en tabla
-          extra: totalExtra + totalReembolso,
+          // Campos legacy para compatibilidad
+          extra: totalExtra,
           anticipo: totalAnticipo,
+          reembolso: totalReembolso,
           notas,
           pagado: record?.pagado,
           pagado_at: record?.pagado_at || null,

@@ -16,7 +16,7 @@ export default function SummaryCards({ trabajadores, registros, ramas = [] }) {
     const dias = DIAS_KEYS.reduce((s, d) => s + (r.dias?.[d] || 0), 0);
     const pago = calcPago(t, r);
     totalDias += dias;
-    totalAnticipos += r.anticipo || 0;
+    totalAnticipos += Array.isArray(r.anticipos) ? r.anticipos.reduce((s, a) => s + a.monto, 0) : (r.anticipo || 0);
     totalNomina += pago;
     if (r.pagado) totalPagado += pago;
     if (dias > 0) trabajadoresConRegistro.add(r.trabajador_id);

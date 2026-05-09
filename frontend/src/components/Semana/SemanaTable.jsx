@@ -19,8 +19,9 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
       extras: rec.extras || [],
       anticipos: rec.anticipos || [],
       reembolsos: rec.reembolsos || [],
-      extra: Number(rec.extra) || 0, // ya incluye reembolsos del guardado original
-      anticipo: Number(rec.anticipo) || 0,
+      extra: Array.isArray(rec.extras) ? rec.extras.reduce((s, e) => s + e.monto, 0) : (Number(rec.extra) || 0),
+      anticipo: Array.isArray(rec.anticipos) ? rec.anticipos.reduce((s, a) => s + a.monto, 0) : (Number(rec.anticipo) || 0),
+      reembolso: Array.isArray(rec.reembolsos) ? rec.reembolsos.reduce((s, r) => s + r.monto, 0) : (Number(rec.reembolso) || 0),
       notas: rec.notas || '',
       pagado: !rec.pagado,
       pagado_at: !rec.pagado ? new Date().toISOString() : null,
@@ -47,6 +48,7 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
             {DIAS_KEYS.map((d) => <th key={d} style={{ textAlign: 'center' }}>{DIAS_LABELS[d]}</th>)}
             <th style={{ textAlign: 'right' }}>Dias</th>
             <th style={{ textAlign: 'right' }}>Extra</th>
+            <th style={{ textAlign: 'right' }}>Reembolso</th>
             <th style={{ textAlign: 'right' }}>Anticipo</th>
             <th style={{ textAlign: 'right' }}>Total</th>
             <th style={{ textAlign: 'center' }}>Pagado</th>
@@ -60,6 +62,9 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
             const totalDias = DIAS_KEYS.reduce((s, d) => s + (dias[d] || 0), 0);
             const pago = calcPago(t, rec);
             const rama = ramaMap[t.rama];
+            const extraVal = Array.isArray(rec?.extras) ? rec.extras.reduce((s, e) => s + e.monto, 0) : (rec?.extra || 0);
+            const anticipoVal = Array.isArray(rec?.anticipos) ? rec.anticipos.reduce((s, a) => s + a.monto, 0) : (rec?.anticipo || 0);
+            const reembolsoVal = Array.isArray(rec?.reembolsos) ? rec.reembolsos.reduce((s, r) => s + r.monto, 0) : (rec?.reembolso || 0);
 
             return (
               <tr key={t.id}>
@@ -90,11 +95,14 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
                   );
                 })}
                 <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }}>{totalDias}</td>
-                <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace', color: rec?.extra ? 'var(--green)' : 'var(--text-muted)' }}>
-                  {rec?.extra ? `+$${fmt(rec.extra)}` : '-'}
+                <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace', color: extraVal ? 'var(--green)' : 'var(--text-muted)' }}>
+                  {extraVal ? `+$${fmt(extraVal)}` : '-'}
                 </td>
-                <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace', color: rec?.anticipo ? 'var(--red)' : 'var(--text-muted)' }}>
-                  {rec?.anticipo ? `-$${fmt(rec.anticipo)}` : '-'}
+                <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace', color: reembolsoVal ? 'var(--blue, var(--green))' : 'var(--text-muted)' }}>
+                  {reembolsoVal ? `+$${fmt(reembolsoVal)}` : '-'}
+                </td>
+                <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace', color: anticipoVal ? 'var(--red)' : 'var(--text-muted)' }}>
+                  {anticipoVal ? `-$${fmt(anticipoVal)}` : '-'}
                 </td>
                 <td style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace', color: 'var(--gold)', fontWeight: 600 }}>
                   ${fmt(pago)}
