@@ -38,6 +38,7 @@ function load() {
     data.trabajadores = data.trabajadores.map((t) => ({
       ...t,
       telefono: t.telefono || '',
+      activo: t.activo !== undefined ? t.activo : true,
     }));
     return data;
   } catch (e) {
@@ -77,7 +78,7 @@ const db = {
   // ── Trabajadores ──────────────────────────────────────────────────────────
   getTrabajadores() { return [..._db.trabajadores].sort((a, b) => a.nombre.localeCompare(b.nombre)); },
   getTrabajador(id) { return _db.trabajadores.find(t => t.id === id) || null; },
-  addTrabajador(t) { _db.trabajadores.push({ ...t, telefono: t.telefono || '' }); save(_db); },
+  addTrabajador(t) { _db.trabajadores.push({ ...t, telefono: t.telefono || '', activo: t.activo !== undefined ? t.activo : true }); save(_db); },
   updateTrabajador(id, fields) {
     const idx = _db.trabajadores.findIndex(t => t.id === id);
     if (idx !== -1) { _db.trabajadores[idx] = { ..._db.trabajadores[idx], ...fields }; save(_db); }

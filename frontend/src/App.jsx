@@ -150,9 +150,9 @@ export default function App() {
 
         {activeTab === 'semana' && (
           <>
-            <SummaryCards trabajadores={trabajadores} registros={registros} ramas={ramas} />
+            <SummaryCards trabajadores={trabajadores.filter(t => t.activo !== false)} registros={registros} ramas={ramas} />
             <SemanaTab
-              trabajadores={trabajadores}
+              trabajadores={trabajadores.filter(t => t.activo !== false)}
               ramas={ramas}
               registros={registros}
               cobros={cobros}

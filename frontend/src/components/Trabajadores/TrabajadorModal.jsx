@@ -7,6 +7,7 @@ export default function TrabajadorModal({ trabajador, ramas, onClose, onSaved })
   const [rama, setRama] = useState(trabajador?.rama || ramas[0]?.id || '');
   const [sueldo, setSueldo] = useState(trabajador?.sueldo ? String(trabajador.sueldo) : '');
   const [telefono, setTelefono] = useState(trabajador?.telefono || '');
+  const [activo, setActivo] = useState(trabajador?.activo !== undefined ? trabajador.activo : true);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -14,9 +15,9 @@ export default function TrabajadorModal({ trabajador, ramas, onClose, onSaved })
     setSaving(true);
     try {
       if (isNew) {
-        await createTrabajador({ nombre, rama, sueldo: Number(sueldo) || 0, telefono });
+        await createTrabajador({ nombre, rama, sueldo: Number(sueldo) || 0, telefono, activo });
       } else {
-        await updateTrabajador(trabajador.id, { nombre, rama, sueldo: Number(sueldo) || 0, telefono });
+        await updateTrabajador(trabajador.id, { nombre, rama, sueldo: Number(sueldo) || 0, telefono, activo });
       }
       onSaved();
     } catch (e) {
@@ -73,6 +74,35 @@ export default function TrabajadorModal({ trabajador, ramas, onClose, onSaved })
                 placeholder="Ej. 14105551234"
               />
             </div>
+            {!isNew && (
+              <div className="form-group full">
+                <label>Estado</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setActivo(true)}
+                    style={{
+                      flex: 1, padding: '0.55rem', borderRadius: 8, border: '1px solid',
+                      cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.15s',
+                      background: activo ? 'rgba(34,197,94,0.15)' : 'transparent',
+                      borderColor: activo ? 'var(--green)' : 'var(--border)',
+                      color: activo ? 'var(--green)' : 'var(--text-dim)',
+                    }}
+                  >● Activo</button>
+                  <button
+                    type="button"
+                    onClick={() => setActivo(false)}
+                    style={{
+                      flex: 1, padding: '0.55rem', borderRadius: 8, border: '1px solid',
+                      cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.15s',
+                      background: !activo ? 'rgba(239,68,68,0.12)' : 'transparent',
+                      borderColor: !activo ? 'var(--red)' : 'var(--border)',
+                      color: !activo ? 'var(--red)' : 'var(--text-dim)',
+                    }}
+                  >○ Inactivo</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="modal-footer">
