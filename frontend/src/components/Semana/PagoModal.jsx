@@ -16,15 +16,24 @@ function MovimientosList({ items, onAdd, onRemove, tipo }) {
   const [monto, setMonto] = useState('');
   const [fecha, setFecha] = useState(todaySV);
   const [desc, setDesc] = useState('');
+
   const color = tipo === 'extra' ? 'var(--gold)' : tipo === 'reembolso' ? 'var(--blue)' : 'var(--red)';
   const label = tipo === 'extra' ? 'Pago Extra' : tipo === 'reembolso' ? 'Reembolso' : 'Anticipo';
 
-  function agregar() {
-    if (!monto || isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) return;
-    onAdd({ monto: parseFloat(monto), fecha, descripcion: desc.trim() });
-    setMonto(''); setDesc('');
+  // Parsear el monto tolerando comas y espacios (ej. "1,500" o "1.500")
+  function parseMonto(str) {
+    return parseFloat(String(str).replace(/,/g, '.').trim());
   }
 
+  function agregar() {
+    const val = parseMonto(monto);
+    if (!monto.trim() || isNaN(val) || val <= 0) return;
+    onAdd({ monto: val, fecha, descripcion: desc.trim() });
+    setMonto('');
+    setDesc('');
+  }
+
+  const canAdd = monto.trim() !== '' && !isNaN(parseMonto(monto)) && parseMonto(monto) > 0;
   const total = items.reduce((s, i) => s + i.monto, 0);
 
   return (
@@ -34,7 +43,7 @@ function MovimientosList({ items, onAdd, onRemove, tipo }) {
         {total > 0 && <span style={{ fontFamily: 'monospace', fontSize: '0.9rem', color }}>${fmt(total)}</span>}
       </div>
 
-      {/* Lista de entradas */}
+      {/* Lista de entradas existentes */}
       {items.length > 0 && (
         <div style={{ marginBottom: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
           {items.map((it, i) => (
@@ -43,6 +52,7 @@ function MovimientosList({ items, onAdd, onRemove, tipo }) {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', minWidth: 80 }}>{it.fecha}</span>
               <span style={{ flex: 1, fontSize: '0.8rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.descripcion || '—'}</span>
               <button
+                type="button"
                 style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '0.85rem', padding: '0 0.2rem' }}
                 onClick={() => onRemove(i)}
                 title="Eliminar"
@@ -52,38 +62,49 @@ function MovimientosList({ items, onAdd, onRemove, tipo }) {
         </div>
       )}
 
-      {/* Agregar nueva entrada */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px 110px 1fr auto', gap: '0.4rem', alignItems: 'center' }}>
+      {/* Formulario para agregar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+        {/* Monto — type="text" inputMode="decimal" para evitar problemas en iOS Safari */}
         <input
           className="form-input"
-          type="number" min="0" step="0.01"
+          type="text"
+          inputMode="decimal"
           value={monto}
           onChange={e => setMonto(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && agregar()}
           placeholder="$0.00"
-          style={{ fontSize: '0.82rem', padding: '0.35rem 0.5rem' }}
+          style={{ width: 90, fontSize: '0.88rem', padding: '0.35rem 0.5rem' }}
         />
         <input
           type="date"
           className="form-input"
           value={fecha}
           onChange={e => setFecha(e.target.value)}
-          style={{ fontSize: '0.82rem', padding: '0.35rem 0.5rem' }}
+          style={{ width: 130, fontSize: '0.82rem', padding: '0.35rem 0.5rem' }}
         />
         <input
           className="form-input"
+          type="text"
           value={desc}
           onChange={e => setDesc(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && agregar()}
-          placeholder="Descripción..."
-          style={{ fontSize: '0.82rem', padding: '0.35rem 0.5rem' }}
+          placeholder="Descripción (opcional)"
+          style={{ flex: '1 1 120px', minWidth: 100, fontSize: '0.82rem', padding: '0.35rem 0.5rem' }}
         />
         <button
-          className="btn btn-sm btn-outline"
+          type="button"
+          className="btn btn-sm"
           onClick={agregar}
-          disabled={!monto || parseFloat(monto) <= 0}
-          style={{ whiteSpace: 'nowrap', borderColor: color, color }}
-        >+ Add</button>
+          style={{
+            whiteSpace: 'nowrap',
+            background: canAdd ? color : 'transparent',
+            color: canAdd ? (tipo === 'extra' ? '#000' : '#fff') : 'var(--text-muted)',
+            border: `1px solid ${canAdd ? color : 'var(--border)'}`,
+            cursor: canAdd ? 'pointer' : 'not-allowed',
+            opacity: canAdd ? 1 : 0.5,
+            transition: 'all 0.15s',
+          }}
+        >+ Agregar</button>
       </div>
     </div>
   );
@@ -105,10 +126,15 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
     if (record) {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0, ...(record.dias || {}) });
       // Compatibilidad con registros viejos (extra/anticipo como número)
-      // Usar arrays si existen (incluso vacíos); si no, convertir campos legacy a array
-      const extrasArr = Array.isArray(record.extras) ? record.extras : (record.extra ? [{ monto: record.extra, fecha: semanaKey, descripcion: '' }] : []);
-      const anticiposArr = Array.isArray(record.anticipos) ? record.anticipos : (record.anticipo ? [{ monto: record.anticipo, fecha: semanaKey, descripcion: '' }] : []);
-      const reembolsosArr = Array.isArray(record.reembolsos) ? record.reembolsos : (record.reembolso ? [{ monto: record.reembolso, fecha: semanaKey, descripcion: '' }] : []);
+      const extrasArr = Array.isArray(record.extras)
+        ? record.extras
+        : (record.extra ? [{ monto: record.extra, fecha: semanaKey, descripcion: '' }] : []);
+      const anticiposArr = Array.isArray(record.anticipos)
+        ? record.anticipos
+        : (record.anticipo ? [{ monto: record.anticipo, fecha: semanaKey, descripcion: '' }] : []);
+      const reembolsosArr = Array.isArray(record.reembolsos)
+        ? record.reembolsos
+        : (record.reembolso ? [{ monto: record.reembolso, fecha: semanaKey, descripcion: '' }] : []);
       setExtras(extrasArr);
       setAnticipos(anticiposArr);
       setReembolsos(reembolsosArr);
@@ -139,7 +165,6 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           extras,
           anticipos,
           reembolsos,
-          // Campos legacy para compatibilidad
           extra: totalExtra,
           anticipo: totalAnticipo,
           reembolso: totalReembolso,
@@ -178,7 +203,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
               padding: '0.1rem 0.3rem', width: '100%', outline: 'none',
             }}
           />
-          <button className="btn btn-icon btn-outline" onClick={onClose}>✕</button>
+          <button type="button" className="btn btn-icon btn-outline" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
 
@@ -192,6 +217,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
                   const cls = val === 1 ? 'full' : val === 0.5 ? 'half' : '';
                   return (
                     <button
+                      type="button"
                       key={d}
                       className={`day-btn${cls ? ' ' + cls : ''}`}
                       onClick={() => setDias(prev => ({ ...prev, [d]: cycleDay(prev[d] || 0) }))}
@@ -267,8 +293,8 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
