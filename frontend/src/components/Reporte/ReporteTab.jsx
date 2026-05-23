@@ -13,19 +13,59 @@ function getSemanaFechas(semanaKey) {
   });
 }
 
+function getPeriodKey(filtro, semanaKey, diaSeleccionado, mesYear, mesMonth) {
+  if (filtro === 'semana') return `semana_${semanaKey}`;
+  if (filtro === 'dia') return `dia_${diaSeleccionado}`;
+  return `mes_${mesYear}_${mesMonth}`;
+}
+
+const STORAGE_KEY = 'gm_montos_entregados';
+
+function loadMontos(periodKey) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [{ id: Date.now(), label: '', monto: '' }];
+    const all = JSON.parse(raw);
+    const saved = all[periodKey];
+    if (Array.isArray(saved) && saved.length > 0) return saved;
+  } catch {}
+  return [{ id: Date.now(), label: '', monto: '' }];
+}
+
+function saveMontos(periodKey, montos) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    all[periodKey] = montos;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  } catch {}
+}
+
 export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, semanaOffset, setSemanaOffset }) {
   const hoy = new Date();
-  const [filtro, setFiltro] = useState('semana'); // 'dia' | 'semana' | 'mes'
+  const [filtro, setFiltro] = useState('semana');
   const [diaSeleccionado, setDiaSeleccionado] = useState(() => hoy.toLocaleDateString('sv-SE'));
   const [mesYear, setMesYear] = useState(hoy.getFullYear());
   const [mesMonth, setMesMonth] = useState(hoy.getMonth() + 1);
   const [registrosMes, setRegistrosMes] = useState([]);
   const [loadingMes, setLoadingMes] = useState(false);
   const [filtroRama, setFiltroRama] = useState('todas');
-  const [montoEntregado, setMontoEntregado] = useState('');
+  const [montosEntregados, setMontosEntregados] = useState([{ id: Date.now(), label: '', monto: '' }]);
 
   const ramaMap = Object.fromEntries(ramas.map((r) => [r.id, r]));
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
+
+  const periodKey = getPeriodKey(filtro, semanaKey, diaSeleccionado, mesYear, mesMonth);
+
+  // Cargar montos guardados cuando cambia el período
+  useEffect(() => {
+    setMontosEntregados(loadMontos(periodKey));
+  }, [periodKey]);
+
+  // Guardar montos cuando cambian
+  useEffect(() => {
+    saveMontos(periodKey, montosEntregados);
+  }, [periodKey, montosEntregados]);
 
   // Cargar datos del mes
   useEffect(() => {
@@ -35,6 +75,23 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       .then(setRegistrosMes)
       .finally(() => setLoadingMes(false));
   }, [filtro, mesYear, mesMonth]);
+
+  function agregarMonto() {
+    setMontosEntregados(prev => [...prev, { id: Date.now(), label: '', monto: '' }]);
+  }
+
+  function eliminarMonto(id) {
+    setMontosEntregados(prev => {
+      const next = prev.filter(m => m.id !== id);
+      return next.length === 0 ? [{ id: Date.now(), label: '', monto: '' }] : next;
+    });
+  }
+
+  function actualizarMonto(id, field, value) {
+    setMontosEntregados(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
+  }
+
+  const totalEntregado = montosEntregados.reduce((s, m) => s + (Number(m.monto) || 0), 0);
 
   // ── Datos para filtro DÍA ──────────────────────────────────────────────
   const diasDeSemana = getSemanaFechas(semanaKey);
@@ -97,6 +154,8 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
 
   const filas = filtro === 'dia' ? filasDia : filtro === 'semana' ? filasSemana : filasMes;
   const total = filtro === 'dia' ? totalDia : filtro === 'semana' ? totalSemana : totalMes;
+
+  const sobrante = totalEntregado > 0 ? totalEntregado - total : null;
 
   return (
     <>
@@ -272,43 +331,108 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
             </table>
           </div>
 
-          {/* Monto entregado y sobrante */}
+          {/* Montos entregados */}
           <div className="print-sobrante" style={{
             background: 'var(--surface)', border: '1px solid var(--border)',
             borderRadius: 8, padding: '1rem', marginTop: '1rem',
-            display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>Monto entregado:</label>
-              <input
-                className="form-input no-print"
-                type="number" min="0" step="0.01"
-                value={montoEntregado}
-                onChange={e => setMontoEntregado(e.target.value)}
-                placeholder="0.00"
-                style={{ width: 120, fontSize: '0.95rem', fontFamily: 'DM Mono, monospace' }}
-              />
-              <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '1rem', fontWeight: 700 }}>
-                {montoEntregado ? `$${fmt(Number(montoEntregado))}` : ''}
+            {/* Fila de encabezado */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Montos entregados
               </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
+                  Total nómina: <strong style={{ color: 'var(--gold)', fontFamily: 'DM Mono, monospace' }}>${fmt(total)}</strong>
+                </span>
+                <button
+                  className="btn btn-outline btn-sm no-print"
+                  onClick={agregarMonto}
+                  style={{ fontSize: '0.8rem' }}
+                >
+                  + Agregar
+                </button>
+              </div>
             </div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
-              Total nómina: <strong style={{ color: 'var(--gold)', fontFamily: 'DM Mono, monospace' }}>${fmt(total)}</strong>
+
+            {/* Lista de casillas */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {montosEntregados.map((m, idx) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)', minWidth: 20, textAlign: 'right' }}>
+                    {idx + 1}.
+                  </span>
+                  <input
+                    className="form-input no-print"
+                    type="text"
+                    placeholder="Descripción (opcional)"
+                    value={m.label}
+                    onChange={e => actualizarMonto(m.id, 'label', e.target.value)}
+                    style={{ width: 180, fontSize: '0.88rem' }}
+                  />
+                  <input
+                    className="form-input no-print"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={m.monto}
+                    onChange={e => actualizarMonto(m.id, 'monto', e.target.value)}
+                    style={{ width: 120, fontSize: '0.95rem', fontFamily: 'DM Mono, monospace' }}
+                  />
+                  {Number(m.monto) > 0 && (
+                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '0.95rem', color: 'var(--text-dim)', minWidth: 90 }}>
+                      ${fmt(Number(m.monto))}
+                    </span>
+                  )}
+                  {/* Descripción para impresión */}
+                  <span className="print-only" style={{ display: 'none', fontSize: '0.88rem' }}>
+                    {m.label ? `${m.label}: ` : ''}<strong>${fmt(Number(m.monto) || 0)}</strong>
+                  </span>
+                  {montosEntregados.length > 1 && (
+                    <button
+                      className="btn btn-icon btn-outline no-print"
+                      onClick={() => eliminarMonto(m.id)}
+                      title="Eliminar"
+                      style={{ color: 'var(--red)', borderColor: 'var(--red)', opacity: 0.7, fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
-            {montoEntregado && Number(montoEntregado) > 0 && (
+
+            {/* Fila de totales */}
+            {totalEntregado > 0 && (
               <div style={{
-                marginLeft: 'auto', background: Number(montoEntregado) >= total ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                border: `1px solid ${Number(montoEntregado) >= total ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                borderRadius: 8, padding: '0.5rem 1rem', textAlign: 'right',
+                marginTop: '0.75rem',
+                paddingTop: '0.75rem',
+                borderTop: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
               }}>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {Number(montoEntregado) >= total ? 'Sobrante' : 'Faltante'}
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
+                  Total entregado:{' '}
+                  <strong style={{ fontFamily: 'DM Mono, monospace', color: 'var(--text)' }}>${fmt(totalEntregado)}</strong>
                 </div>
                 <div style={{
-                  fontFamily: 'DM Mono, monospace', fontSize: '1.3rem', fontWeight: 700,
-                  color: Number(montoEntregado) >= total ? 'var(--green)' : 'var(--red)',
+                  background: sobrante >= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                  border: `1px solid ${sobrante >= 0 ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                  borderRadius: 8, padding: '0.5rem 1rem', textAlign: 'right',
                 }}>
-                  ${fmt(Math.abs(Number(montoEntregado) - total))}
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {sobrante >= 0 ? 'Sobrante' : 'Faltante'}
+                  </div>
+                  <div style={{
+                    fontFamily: 'DM Mono, monospace', fontSize: '1.3rem', fontWeight: 700,
+                    color: sobrante >= 0 ? 'var(--green)' : 'var(--red)',
+                  }}>
+                    ${fmt(Math.abs(sobrante))}
+                  </div>
                 </div>
               </div>
             )}
