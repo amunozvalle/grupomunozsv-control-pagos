@@ -1,6 +1,8 @@
 const express = require('express');
-const router = express.Router();
+const { nanoid } = require('nanoid');
 const db = require('../store');
+
+const router = express.Router();
 
 // GET /api/cobros — lista todos
 router.get('/', (req, res) => {
@@ -23,7 +25,7 @@ router.post('/', (req, res) => {
       const monto = parseFloat(match[2].replace(',', '.'));
       if (!nombre || isNaN(monto) || monto <= 0) continue;
       const cobro = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        id: nanoid(10),
         nombre,
         monto,
         fecha: hoy,
@@ -38,7 +40,7 @@ router.post('/', (req, res) => {
     const { nombre, monto } = req.body;
     if (!nombre || !monto) return res.status(400).json({ error: 'nombre y monto requeridos' });
     const cobro = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: nanoid(10),
       nombre: nombre.trim().toUpperCase(),
       monto: parseFloat(monto),
       fecha: hoy,
