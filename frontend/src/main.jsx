@@ -9,3 +9,9 @@ const isRegistrar = window.location.pathname.startsWith('/registrar/');
 ReactDOM.createRoot(document.getElementById('root')).render(
   isRegistrar ? <RegistrarPage /> : <App />
 );
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}

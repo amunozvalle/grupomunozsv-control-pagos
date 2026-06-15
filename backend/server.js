@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const { attachSession, requireAdmin } = require('./auth');
+const { attachSession, requireAdmin, requireViewer } = require('./auth');
 const { backupToGithub } = require('./backup-github');
 const { initWhatsApp, enviarRecordatorios, getStatus: waStatus } = require('./whatsapp-bot');
 
@@ -31,10 +31,11 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/registrar', require('./routes/registrar'));
 app.use('/api/trabajadores', requireAdmin, require('./routes/trabajadores'));
 app.use('/api/ramas', requireAdmin, require('./routes/ramas'));
-app.use('/api/registros', requireAdmin, require('./routes/registros'));
+app.use('/api/registros', requireViewer, require('./routes/registros'));
 app.use('/api/whatsapp', requireAdmin, require('./routes/whatsapp'));
-app.use('/api/cobros', requireAdmin, require('./routes/cobros'));
+app.use('/api/cobros', requireViewer, require('./routes/cobros'));
 app.use('/api/admin-users', requireAdmin, require('./routes/adminUsers'));
+app.get('/api/audit', requireAdmin, require('./routes/audit'));
 
 // Backup manual desde el dashboard
 app.post('/api/backup-github', requireAdmin, async (req, res) => {

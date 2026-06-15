@@ -9,11 +9,12 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function SemanaTab({ trabajadores, ramas, registros, cobros = [], semanaKey, semanaOffset, setSemanaOffset, onRefresh, onRefreshCobros }) {
+export default function SemanaTab({ trabajadores, ramas, registros, cobros = [], semanaKey, semanaOffset, setSemanaOffset, onRefresh, onRefreshCobros, isViewer }) {
   const [filtroRama, setFiltroRama] = useState('todos');
   const [editando, setEditando] = useState(null);
   const [compartirOpen, setCompartirOpen] = useState(false);
   const [recordatorioOpen, setRecordatorioOpen] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
 
   // Cobro rápido inline
   const [cobroNombre, setCobroNombre] = useState('');
@@ -24,6 +25,10 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
   const ramasFiltradas = filtroRama === 'todos'
     ? trabajadores
     : trabajadores.filter((t) => t.rama === filtroRama);
+
+  const trabajadoresFiltrados = busqueda.trim()
+    ? ramasFiltradas.filter(t => t.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    : ramasFiltradas;
 
   const recordMap = Object.fromEntries(registros.map((r) => [r.trabajador_id, r]));
 
@@ -93,15 +98,24 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
             {rama.emoji} {rama.label}
           </button>
         ))}
+        <input
+          className="form-input"
+          type="text"
+          placeholder="🔍 Buscar…"
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          style={{ marginLeft: 'auto', width: 180, fontSize: '0.82rem' }}
+        />
       </div>
 
       <SemanaTable
-        trabajadores={ramasFiltradas}
+        trabajadores={trabajadoresFiltrados}
         ramas={ramas}
         recordMap={recordMap}
         semanaKey={semanaKey}
         onEdit={(t) => setEditando({ trabajador: t, record: recordMap[t.id] || null })}
         onRefresh={onRefresh}
+        isViewer={isViewer}
       />
 
       {/* ── DINERO RECIBIDO ── */}

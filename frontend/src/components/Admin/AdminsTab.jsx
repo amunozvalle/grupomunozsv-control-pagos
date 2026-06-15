@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createAdminUser, getAdminUsers } from '../../api';
 import WhatsappBotPanel from './WhatsappBotPanel';
 
-export default function AdminsTab({ ramas = [] }) {
+export default function AdminsTab({ ramas = [], isViewer }) {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
@@ -10,6 +10,10 @@ export default function AdminsTab({ ramas = [] }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const [auditLog, setAuditLog] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
 
   const loadAdmins = async () => {
     setLoading(true);
@@ -23,6 +27,15 @@ export default function AdminsTab({ ramas = [] }) {
   useEffect(() => {
     loadAdmins();
   }, []);
+
+  async function fetchAudit() {
+    setAuditLoading(true);
+    try {
+      const res = await fetch('/api/audit');
+      if (res.ok) setAuditLog(await res.json());
+    } catch {}
+    setAuditLoading(false);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,35 +88,37 @@ export default function AdminsTab({ ramas = [] }) {
         )}
       </section>
 
-      <section className="admin-panel">
-        <div className="section-header">
-          <span className="section-title">Nuevo Admin</span>
-        </div>
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Usuario</label>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="gerencia"
-            />
+      {!isViewer && (
+        <section className="admin-panel">
+          <div className="section-header">
+            <span className="section-title">Nuevo Admin</span>
           </div>
-          <div className="form-group">
-            <label>Contrasena</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimo 8 caracteres"
-            />
-          </div>
-          {message && <div className="alert alert-success">{message}</div>}
-          {error && <div className="alert alert-danger">{error}</div>}
-          <button className="btn btn-primary" type="submit" disabled={saving}>
-            {saving ? 'Guardando...' : 'Crear admin'}
-          </button>
-        </form>
-      </section>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Usuario</label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="gerencia"
+              />
+            </div>
+            <div className="form-group">
+              <label>Contrasena</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimo 8 caracteres"
+              />
+            </div>
+            {message && <div className="alert alert-success">{message}</div>}
+            {error && <div className="alert alert-danger">{error}</div>}
+            <button className="btn btn-primary" type="submit" disabled={saving}>
+              {saving ? 'Guardando...' : 'Crear admin'}
+            </button>
+          </form>
+        </section>
+      )}
     </div>
 
     <div style={{ marginTop: '2rem' }}>
@@ -111,6 +126,45 @@ export default function AdminsTab({ ramas = [] }) {
         <span className="section-title">WhatsApp Bot</span>
       </div>
       <WhatsappBotPanel ramas={ramas} />
+    </div>
+
+    <div style={{ marginTop: '2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <span style={{ fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', fontSize: '0.78rem', letterSpacing: '0.08em' }}>Log de Auditoría</span>
+        <button type="button" className="btn btn-sm btn-outline" onClick={() => { setShowAudit(v => !v); if (!showAudit) fetchAudit(); }}>
+          {showAudit ? 'Ocultar' : 'Ver log'}
+        </button>
+      </div>
+      {showAudit && (
+        auditLoading ? (
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Cargando…</div>
+        ) : auditLog.length === 0 ? (
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Sin entradas</div>
+        ) : (
+          <div className="table-wrap" style={{ maxHeight: 320, overflowY: 'auto' }}>
+            <table style={{ fontSize: '0.78rem' }}>
+              <thead>
+                <tr>
+                  <th>Fecha/Hora</th>
+                  <th>Usuario</th>
+                  <th>Acción</th>
+                  <th>Detalles</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLog.map(entry => (
+                  <tr key={entry.id}>
+                    <td style={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{new Date(entry.timestamp).toLocaleString('es-SV', { timeZone: 'America/El_Salvador', hour12: false })}</td>
+                    <td>{entry.admin}</td>
+                    <td><code style={{ fontSize: '0.72rem' }}>{entry.action}</code></td>
+                    <td style={{ color: 'var(--text-dim)' }}>{JSON.stringify(entry.details)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
     </div>
     </>
   );

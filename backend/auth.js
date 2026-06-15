@@ -29,6 +29,7 @@ function createSessionToken(admin) {
   const payload = {
     username: admin.username,
     displayName: admin.displayName,
+    role: admin.role || 'admin',
     exp: Date.now() + SESSION_TTL_MS,
   };
   const encoded = base64url(JSON.stringify(payload));
@@ -52,6 +53,7 @@ function readSession(req) {
     return {
       username: payload.username,
       displayName: payload.displayName,
+      role: payload.role || 'admin',
     };
   } catch {
     return null;
@@ -91,16 +93,21 @@ function attachSession(req, res, next) {
   next();
 }
 
+function requireViewer(req, res, next) {
+  if (!req.admin) return res.status(401).json({ error: 'No autorizado' });
+  return next();
+}
+
 function requireAdmin(req, res, next) {
-  if (!req.admin) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
+  if (!req.admin) return res.status(401).json({ error: 'No autorizado' });
+  if (req.admin.role && req.admin.role !== 'admin') return res.status(403).json({ error: 'Se requiere rol admin' });
   return next();
 }
 
 module.exports = {
   attachSession,
   requireAdmin,
+  requireViewer,
   createSessionToken,
   sessionCookie,
   clearSessionCookie,

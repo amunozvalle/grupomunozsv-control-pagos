@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { fmt } from '../../utils/week';
 import { deleteTrabajador } from '../../api';
 import TrabajadorModal from './TrabajadorModal';
+import HistorialModal from './HistorialModal';
 
-export default function TrabajadoresTab({ trabajadores, ramas, onRefresh }) {
+export default function TrabajadoresTab({ trabajadores, ramas, onRefresh, isViewer }) {
   const [editando, setEditando] = useState(null); // null = closed, {} = new, {id,...} = edit
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [historialWorker, setHistorialWorker] = useState(null);
   const ramaMap = Object.fromEntries(ramas.map(r => [r.id, r]));
 
   const handleDelete = async (t) => {
@@ -32,7 +34,9 @@ export default function TrabajadoresTab({ trabajadores, ramas, onRefresh }) {
               {mostrarInactivos ? 'Ocultar inactivos' : `Mostrar inactivos (${inactivos.length})`}
             </button>
           )}
-          <button className="btn btn-primary" onClick={() => setEditando({})}>+ Nuevo Trabajador</button>
+          {!isViewer && (
+            <button className="btn btn-primary" onClick={() => setEditando({})}>+ Nuevo Trabajador</button>
+          )}
         </div>
       </div>
 
@@ -89,8 +93,13 @@ export default function TrabajadoresTab({ trabajadores, ramas, onRefresh }) {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
-                        <button className="btn btn-icon btn-outline btn-sm" onClick={() => setEditando(t)}>✏️</button>
-                        <button className="btn btn-icon btn-danger btn-sm" onClick={() => handleDelete(t)}>🗑</button>
+                        <button type="button" className="btn btn-sm btn-outline" onClick={() => setHistorialWorker(t)}>Historial</button>
+                        {!isViewer && (
+                          <>
+                            <button className="btn btn-icon btn-outline btn-sm" onClick={() => setEditando(t)}>✏️</button>
+                            <button className="btn btn-icon btn-danger btn-sm" onClick={() => handleDelete(t)}>🗑</button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -109,6 +118,7 @@ export default function TrabajadoresTab({ trabajadores, ramas, onRefresh }) {
           onSaved={() => { setEditando(null); onRefresh(); }}
         />
       )}
+      {historialWorker && <HistorialModal trabajador={historialWorker} onClose={() => setHistorialWorker(null)} />}
     </>
   );
 }

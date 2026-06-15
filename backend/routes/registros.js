@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../store');
 
+// GET /api/registros/trabajador/:id — historial de un trabajador
+router.get('/trabajador/:id', (req, res) => {
+  res.json(db.getRegistrosTrabajador(req.params.id));
+});
+
 // GET /api/registros/mes/:year/:month — todas las semanas del mes
 router.get('/mes/:year/:month', (req, res) => {
   const year = parseInt(req.params.year);
@@ -29,7 +34,7 @@ router.post('/:semana', (req, res) => {
     trabajador_id, dias,
     extras, anticipos, reembolsos,
     extra, anticipo, reembolso,
-    notas, pagado, pagado_at,
+    notas, pagado, pagado_at, notasDias,
   } = req.body;
   if (!trabajador_id) return res.status(400).json({ error: 'trabajador_id requerido' });
   const fields = {
@@ -47,7 +52,9 @@ router.post('/:semana', (req, res) => {
     fields.pagado = Boolean(pagado);
     fields.pagado_at = pagado ? (pagado_at || new Date().toISOString()) : null;
   }
+  if (notasDias !== undefined) fields.notasDias = notasDias;
   const row = db.upsertRegistro(semana, trabajador_id, fields);
+  db.logAction(req, 'upsert_registro', { trabajador_id, semana });
   res.json(row);
 });
 

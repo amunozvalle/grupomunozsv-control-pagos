@@ -116,6 +116,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
   const [anticipos, setAnticipos] = useState([]);
   const [reembolsos, setReembolsos] = useState([]);
   const [notas, setNotas] = useState('');
+  const [notasDias, setNotasDias] = useState({ L: '', M: '', X: '', J: '', V: '', S: '' });
   const [sueldo, setSueldo] = useState(String(trabajador?.sueldo || ''));
   const [nombre, setNombre] = useState(trabajador?.nombre || '');
   const [saving, setSaving] = useState(false);
@@ -139,9 +140,11 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
       setAnticipos(anticiposArr);
       setReembolsos(reembolsosArr);
       setNotas(record.notas || '');
+      setNotasDias(record.notasDias || { L: '', M: '', X: '', J: '', V: '', S: '' });
     } else {
       setDias({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 });
       setExtras([]); setAnticipos([]); setReembolsos([]); setNotas('');
+      setNotasDias({ L: '', M: '', X: '', J: '', V: '', S: '' });
     }
   }, [record, trabajador, semanaKey]);
 
@@ -169,6 +172,7 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
           anticipo: totalAnticipo,
           reembolso: totalReembolso,
           notas,
+          notasDias,
           pagado: record?.pagado,
           pagado_at: record?.pagado_at || null,
         }),
@@ -231,6 +235,23 @@ export default function PagoModal({ trabajador, record, semanaKey, onClose, onSa
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
                 ○ ausente → ● completo → ◐ medio día
               </div>
+              {DIAS_KEYS.some(d => (dias[d] || 0) > 0) && (
+                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  {DIAS_KEYS.filter(d => (dias[d] || 0) > 0).map(d => (
+                    <div key={d} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', minWidth: 28, fontFamily: 'monospace' }}>{DIAS_LABELS[d]}</span>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Nota del día (opcional)…"
+                        value={notasDias[d] || ''}
+                        onChange={e => setNotasDias(prev => ({ ...prev, [d]: e.target.value }))}
+                        style={{ fontSize: '0.78rem', padding: '0.25rem 0.5rem' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

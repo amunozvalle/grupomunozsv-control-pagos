@@ -169,6 +169,35 @@ const db = {
     }
     return result;
   },
+
+  // Audit log
+  getAuditLog() { return [...(_db.audit || [])].reverse(); },
+  addAuditLog(entry) {
+    if (!_db.audit) _db.audit = [];
+    _db.audit.push(entry);
+    if (_db.audit.length > 500) _db.audit = _db.audit.slice(-500);
+    save(_db);
+  },
+
+  // Historial por trabajador
+  getRegistrosTrabajador(trabajador_id) {
+    const result = [];
+    for (const [semana, workers] of Object.entries(_db.registros || {})) {
+      if (workers[trabajador_id]) {
+        result.push({ semana, trabajador_id, ...workers[trabajador_id] });
+      }
+    }
+    return result.sort((a, b) => b.semana.localeCompare(a.semana));
+  },
 };
 
+db.logAction = function(req, action, details) {
+  db.addAuditLog({
+    id: Date.now() + '-' + Math.random().toString(36).slice(2,6),
+    timestamp: new Date().toISOString(),
+    admin: req.admin?.username || 'unknown',
+    action,
+    details,
+  });
+};
 module.exports = db;

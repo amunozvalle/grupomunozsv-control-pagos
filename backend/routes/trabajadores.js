@@ -19,6 +19,7 @@ router.post('/', (req, res) => {
     activo: activo !== undefined ? Boolean(activo) : true,
   };
   db.addTrabajador(t);
+  db.logAction(req, 'create_trabajador', { nombre: t.nombre });
   res.json(t);
 });
 
@@ -31,11 +32,13 @@ router.put('/:id', (req, res) => {
   if (telefono !== undefined) fields.telefono = typeof telefono === 'string' ? telefono.trim() : '';
   if (activo !== undefined) fields.activo = Boolean(activo);
   db.updateTrabajador(req.params.id, fields);
+  db.logAction(req, 'update_trabajador', { id: req.params.id, fields: Object.keys(fields) });
   res.json(db.getTrabajador(req.params.id));
 });
 
 router.delete('/:id', (req, res) => {
   db.deleteTrabajador(req.params.id);
+  db.logAction(req, 'delete_trabajador', { id: req.params.id });
   res.json({ ok: true });
 });
 

@@ -157,6 +157,43 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
 
   const sobrante = totalEntregado > 0 ? totalEntregado - total : null;
 
+  function exportarCSV() {
+    let headers, rows;
+    if (filtro === 'dia') {
+      headers = ['Trabajador', 'Rama', 'Asistencia', 'Total'];
+      rows = filas.map(f => [
+        f.t.nombre,
+        ramaMap[f.t.rama]?.label || f.t.rama,
+        f.diasTrabajados === 1 ? 'Completo' : 'Medio día',
+        fmt(f.pagoDia),
+      ]);
+    } else {
+      headers = ['Trabajador', 'Rama', 'Días', 'Extra', 'Reembolso', 'Anticipo', 'Total', filtro === 'semana' ? 'Estado' : null].filter(Boolean);
+      rows = filas.map(f => {
+        const row = [f.t.nombre, ramaMap[f.t.rama]?.label || f.t.rama, f.dias, fmt(f.extra), fmt(f.reembolso), fmt(f.anticipo), fmt(f.pago)];
+        if (filtro === 'semana') row.push(f.r?.pagado ? 'Pagado' : 'Pendiente');
+        return row;
+      });
+      const totRow = ['', '', '', '', '', 'TOTAL', fmt(total)];
+      if (filtro === 'semana') totRow.push('');
+      rows.push(totRow);
+    }
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filtro === 'dia'
+      ? `Nomina_${diaSeleccionado}.csv`
+      : filtro === 'semana'
+      ? `Nomina_Semana_${semanaKey}.csv`
+      : `Nomina_${MESES[mesMonth - 1]}_${mesYear}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <>
       {/* Print header con fecha — solo visible al imprimir */}
@@ -174,18 +211,23 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       {/* Header */}
       <div className="section-header">
         <span className="section-title">Reporte</span>
-        <button className="btn btn-outline btn-sm no-print" onClick={() => {
-          const orig = document.title;
-          if (filtro === 'dia') {
-            document.title = `Nomina_${diaSeleccionado}`;
-          } else if (filtro === 'semana') {
-            document.title = `Nomina_Semana_${semanaKey}`;
-          } else {
-            document.title = `Nomina_${MESES[mesMonth - 1]}_${mesYear}`;
-          }
-          window.print();
-          setTimeout(() => { document.title = orig; }, 1000);
-        }}>🖨 Imprimir</button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-outline btn-sm no-print" onClick={exportarCSV} disabled={filas.length === 0}>
+            📥 CSV
+          </button>
+          <button className="btn btn-outline btn-sm no-print" onClick={() => {
+            const orig = document.title;
+            if (filtro === 'dia') {
+              document.title = `Nomina_${diaSeleccionado}`;
+            } else if (filtro === 'semana') {
+              document.title = `Nomina_Semana_${semanaKey}`;
+            } else {
+              document.title = `Nomina_${MESES[mesMonth - 1]}_${mesYear}`;
+            }
+            window.print();
+            setTimeout(() => { document.title = orig; }, 1000);
+          }}>🖨 Imprimir</button>
+        </div>
       </div>
 
       {/* Barra de filtros */}

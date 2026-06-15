@@ -43,6 +43,7 @@ function seedBootstrapAdmin() {
     passwordHash: hashPassword(password),
     createdAt: new Date().toISOString(),
     createdBy: 'bootstrap',
+    role: 'admin',
   };
   writeAdmins([admin]);
 }
@@ -63,6 +64,7 @@ function ensureBootstrapAdmin(admins) {
     passwordHash: hashPassword(password),
     createdAt: new Date().toISOString(),
     createdBy: 'bootstrap',
+    role: 'admin',
   }];
   writeAdmins(nextAdmins);
   return nextAdmins;
@@ -102,7 +104,7 @@ function verifyAdmin(username, password) {
   return safeAdmin;
 }
 
-function createAdmin({ username, password, createdBy }) {
+function createAdmin({ username, password, createdBy, role = 'admin' }) {
   const trimmed = String(username || '').trim();
   const normalized = normalizeUsername(trimmed);
   if (!normalized) throw new Error('Usuario requerido');
@@ -121,6 +123,7 @@ function createAdmin({ username, password, createdBy }) {
     passwordHash: hashPassword(password),
     createdAt: new Date().toISOString(),
     createdBy: createdBy || 'admin',
+    role,
   };
   admins.push(admin);
   writeAdmins(admins);
@@ -129,8 +132,13 @@ function createAdmin({ username, password, createdBy }) {
   return safeAdmin;
 }
 
+function createViewer({ username, password, createdBy }) {
+  return createAdmin({ username, password, createdBy, role: 'viewer' });
+}
+
 module.exports = {
   listAdmins,
   verifyAdmin,
   createAdmin,
+  createViewer,
 };

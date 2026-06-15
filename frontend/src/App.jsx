@@ -42,6 +42,7 @@ export default function App() {
   const [currentAdmin, setCurrentAdmin] = useState(null);
 
   const semanaKey = getSemanaKey(semanaOffset);
+  const isViewer = currentAdmin?.role === 'viewer';
 
   const loadSession = useCallback(async () => {
     try {
@@ -161,6 +162,7 @@ export default function App() {
               setSemanaOffset={setSemanaOffset}
               onRefresh={refresh}
               onRefreshCobros={refreshCobros}
+              isViewer={isViewer}
             />
           </>
         )}
@@ -170,6 +172,7 @@ export default function App() {
             trabajadores={trabajadores}
             ramas={ramas}
             onRefresh={refresh}
+            isViewer={isViewer}
           />
         )}
 
@@ -193,7 +196,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'admins' && <AdminsTab ramas={ramas} />}
+        {activeTab === 'admins' && <AdminsTab ramas={ramas} isViewer={isViewer} />}
       </div>
 
       <ImportarModal
