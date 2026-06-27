@@ -773,7 +773,7 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
     font-size: 8px !important;
     width: 100% !important;
     background: #fff !important;
-    table-layout: fixed;
+    table-layout: auto;
   }
 
   table th {
@@ -783,6 +783,7 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
     border-bottom: 2px solid #999 !important;
     font-size: 7px !important;
     white-space: nowrap;
+    position: static !important;
   }
 
   table td {
@@ -793,11 +794,13 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    position: static !important;
   }
 
   table tfoot td {
     background: #f0f0f0 !important;
     color: #000 !important;
+    position: static !important;
   }
 
   tbody tr {
@@ -807,6 +810,14 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
   .table-wrap {
     overflow: visible !important;
     background: #fff !important;
+    max-width: 100% !important;
+  }
+
+  /* Remove sticky positioning in print for table cells */
+  td[style*="sticky"],
+  th[style*="sticky"],
+  tfoot td[style*="sticky"] {
+    position: static !important;
   }
 
   .section-header {
