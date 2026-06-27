@@ -76,6 +76,13 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       .finally(() => setLoadingMes(false));
   }, [filtro, mesYear, mesMonth]);
 
+  // Auto-print cuando se abre con ?print=1 (desde tablet/PWA)
+  useEffect(() => {
+    if (window.location.search.includes('print=1')) {
+      setTimeout(function() { window.print(); }, 1500);
+    }
+  }, []);
+
   function agregarMonto() {
     setMontosEntregados(prev => [...prev, { id: Date.now(), label: '', monto: '' }]);
   }
@@ -215,7 +222,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           <button className="btn btn-outline btn-sm no-print" onClick={exportarCSV} disabled={filas.length === 0}>
             📥 CSV
           </button>
-          <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, minWidth: 44, padding: '0.5rem 1rem' }} onClick={function() { window.print(); }}>🖨 Imprimir</button>
+          <a href={window.location.href + '?print=1'} target="_blank" rel="noopener" className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, minWidth: 44, padding: '0.5rem 1rem', textDecoration: 'none' }}>🖨 Imprimir</a>
         </div>
       </div>
 
