@@ -215,17 +215,25 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           <button className="btn btn-outline btn-sm no-print" onClick={exportarCSV} disabled={filas.length === 0}>
             📥 CSV
           </button>
-          <button className="btn btn-outline btn-sm no-print" onClick={() => {
-            const orig = document.title;
-            if (filtro === 'dia') {
-              document.title = `Nomina_${diaSeleccionado}`;
-            } else if (filtro === 'semana') {
-              document.title = `Nomina_Semana_${semanaKey}`;
-            } else {
-              document.title = `Nomina_${MESES[mesMonth - 1]}_${mesYear}`;
+          <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, minWidth: 44, padding: '0.5rem 1rem' }} onClick={() => {
+            try {
+              const orig = document.title;
+              if (filtro === 'dia') {
+                document.title = 'Nomina_' + diaSeleccionado;
+              } else if (filtro === 'semana') {
+                document.title = 'Nomina_Semana_' + semanaKey;
+              } else {
+                document.title = 'Nomina_' + MESES[mesMonth - 1] + '_' + mesYear;
+              }
+              if (window.print) {
+                window.print();
+              } else {
+                alert('Tu navegador no soporta imprimir. Usá el menú del navegador → Compartir → Imprimir.');
+              }
+              setTimeout(function() { document.title = orig; }, 1000);
+            } catch(e) {
+              alert('Error al imprimir. Usá el menú del navegador → Compartir → Imprimir.');
             }
-            window.print();
-            setTimeout(() => { document.title = orig; }, 1000);
           }}>🖨 Imprimir</button>
         </div>
       </div>
