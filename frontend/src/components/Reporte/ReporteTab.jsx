@@ -217,22 +217,29 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           </button>
           <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, minWidth: 44, padding: '0.5rem 1rem' }} onClick={() => {
             try {
-              const orig = document.title;
+              var nombre = 'Nomina';
               if (filtro === 'dia') {
-                document.title = 'Nomina_' + diaSeleccionado;
+                nombre = 'Nomina_' + diaSeleccionado;
               } else if (filtro === 'semana') {
-                document.title = 'Nomina_Semana_' + semanaKey;
+                nombre = 'Nomina_Semana_' + semanaKey;
               } else {
-                document.title = 'Nomina_' + MESES[mesMonth - 1] + '_' + mesYear;
+                nombre = 'Nomina_' + MESES[mesMonth - 1] + '_' + mesYear;
               }
-              if (window.print) {
+              // Detectar si está en modo PWA/standalone
+              var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+              if (isStandalone) {
+                // En PWA, window.print() no funciona — abrir en navegador
+                window.open(window.location.href, '_blank');
+                alert('Se abrió en el navegador. Desde ahí podés imprimir con el menú ⋮ → Imprimir.');
+              } else {
+                var orig = document.title;
+                document.title = nombre;
                 window.print();
-              } else {
-                alert('Tu navegador no soporta imprimir. Usá el menú del navegador → Compartir → Imprimir.');
+                setTimeout(function() { document.title = orig; }, 1000);
               }
-              setTimeout(function() { document.title = orig; }, 1000);
             } catch(e) {
-              alert('Error al imprimir. Usá el menú del navegador → Compartir → Imprimir.');
+              window.open(window.location.href, '_blank');
+              alert('Se abrió en el navegador. Desde ahí podés imprimir.');
             }
           }}>🖨 Imprimir</button>
         </div>
