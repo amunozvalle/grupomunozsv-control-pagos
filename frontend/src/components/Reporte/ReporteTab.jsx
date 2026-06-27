@@ -215,33 +215,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           <button className="btn btn-outline btn-sm no-print" onClick={exportarCSV} disabled={filas.length === 0}>
             📥 CSV
           </button>
-          <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, minWidth: 44, padding: '0.5rem 1rem' }} onClick={() => {
-            try {
-              var nombre = 'Nomina';
-              if (filtro === 'dia') {
-                nombre = 'Nomina_' + diaSeleccionado;
-              } else if (filtro === 'semana') {
-                nombre = 'Nomina_Semana_' + semanaKey;
-              } else {
-                nombre = 'Nomina_' + MESES[mesMonth - 1] + '_' + mesYear;
-              }
-              // Detectar si está en modo PWA/standalone
-              var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-              if (isStandalone) {
-                // En PWA, window.print() no funciona — abrir en navegador
-                window.open(window.location.href, '_blank');
-                alert('Se abrió en el navegador. Desde ahí podés imprimir con el menú ⋮ → Imprimir.');
-              } else {
-                var orig = document.title;
-                document.title = nombre;
-                window.print();
-                setTimeout(function() { document.title = orig; }, 1000);
-              }
-            } catch(e) {
-              window.open(window.location.href, '_blank');
-              alert('Se abrió en el navegador. Desde ahí podés imprimir.');
-            }
-          }}>🖨 Imprimir</button>
+          <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, minWidth: 44, padding: '0.5rem 1rem' }} onClick={function() { window.print(); }}>🖨 Imprimir</button>
         </div>
       </div>
 
