@@ -105,10 +105,24 @@ function disconnectWhatsApp() {
   fs.rmSync(AUTH_DIR, { recursive: true, force: true });
 }
 
-async function sendMessage(groupId, message) {
+async function sendMessage(groupId, message, retries = 3) {
   if (!sock || status !== 'ready') throw new Error('WhatsApp no está conectado');
   const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
-  await sock.sendMessage(jid, { text: message });
+  for (let i = 0; i < retries; i++) {
+    try {
+      await sock.sendMessage(jid, { text: message });
+      return;
+    } catch (err) {
+      const isNoSession = err?.message?.toLowerCase().includes('no sessions') ||
+                          err?.message?.toLowerCase().includes('nosessions');
+      if (isNoSession && i < retries - 1) {
+        console.log(`[whatsapp] "No sessions" en intento ${i + 1}, reintentando en 3s...`);
+        await new Promise(r => setTimeout(r, 3000));
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 async function getChats() {
