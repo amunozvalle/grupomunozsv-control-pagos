@@ -332,3 +332,9 @@ router.post('/bot/test', async (req, res) => {
 });
 
 module.exports = router;
+
+// Desconectar / cerrar sesión
+router.post('/bot/disconnect', (req, res) => {
+  bot.disconnectWhatsApp();
+  res.json({ ok: true });
+});

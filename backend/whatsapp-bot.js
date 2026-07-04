@@ -1,17 +1,26 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  Browsers,
+} = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
+const { Boom } = require('@hapi/boom');
 
 const DATA_DIR = process.env.DATA_DIR || __dirname;
 const GRUPOS_PATH = path.join(DATA_DIR, 'whatsapp-grupos.json');
+const AUTH_DIR = path.join(DATA_DIR, '.baileys_auth');
 
-let client = null;
+let sock = null;
 let qrDataUrl = null;
-let status = 'disconnected'; // disconnected | qr | connecting | ready
-let readyCallbacks = [];
+let status = 'disconnected'; // disconnected | qr | ready
+let _stopReconnect = false;
 
-// Carga configuración de grupos por rama
+// ── Grupos ────────────────────────────────────────────────────────────────────
+
 function loadGrupos() {
   if (!fs.existsSync(GRUPOS_PATH)) return {};
   try { return JSON.parse(fs.readFileSync(GRUPOS_PATH, 'utf8')); } catch { return {}; }
@@ -21,77 +30,99 @@ function saveGrupos(data) {
   fs.writeFileSync(GRUPOS_PATH, JSON.stringify(data, null, 2));
 }
 
+// ── Estado público ────────────────────────────────────────────────────────────
+
 function getStatus() {
   return { status, hasQr: !!qrDataUrl, qr: status === 'qr' ? qrDataUrl : null };
 }
 
-function initWhatsApp() {
-  if (client) return;
+// ── Inicializar ───────────────────────────────────────────────────────────────
 
-  const authPath = path.join(DATA_DIR, '.wwebjs_auth');
+async function initWhatsApp() {
+  if (sock && status === 'ready') return; // ya conectado
 
-  client = new Client({
-    authStrategy: new LocalAuth({ dataPath: authPath }),
-    puppeteer: {
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-      ],
-    },
+  _stopReconnect = false;
+  if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
+
+  const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+  const { version } = await fetchLatestBaileysVersion();
+
+  sock = makeWASocket({
+    version,
+    auth: state,
+    browser: Browsers.macOS('Desktop'),
+    printQRInTerminal: false,
+    logger: require('pino')({ level: 'silent' }),
   });
 
-  client.on('qr', async (qr) => {
-    status = 'qr';
-    qrDataUrl = await qrcode.toDataURL(qr);
-    console.log('[whatsapp] QR generado — escanea desde el panel');
-  });
+  sock.ev.on('creds.update', saveCreds);
 
-  client.on('authenticated', () => {
-    status = 'connecting';
-    qrDataUrl = null;
-    console.log('[whatsapp] Autenticado');
-  });
+  sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
+    if (qr) {
+      status = 'qr';
+      qrDataUrl = await qrcode.toDataURL(qr);
+      console.log('[whatsapp] QR generado — escanea desde el panel de administración');
+    }
 
-  client.on('ready', () => {
-    status = 'ready';
-    qrDataUrl = null;
-    console.log('[whatsapp] ✓ Listo');
-    readyCallbacks.forEach((cb) => cb());
-    readyCallbacks = [];
-  });
+    if (connection === 'open') {
+      status = 'ready';
+      qrDataUrl = null;
+      console.log('[whatsapp] ✓ Conectado');
+    }
 
-  client.on('disconnected', (reason) => {
-    status = 'disconnected';
-    qrDataUrl = null;
-    client = null;
-    console.log('[whatsapp] Desconectado:', reason);
-  });
+    if (connection === 'close') {
+      const shouldReconnect =
+        !_stopReconnect &&
+        (lastDisconnect?.error instanceof Boom
+          ? lastDisconnect.error.output?.statusCode !== DisconnectReason.loggedOut
+          : true);
 
-  client.initialize().catch((err) => {
-    console.error('[whatsapp] Error al inicializar:', err.message);
-    status = 'disconnected';
-    client = null;
+      status = 'disconnected';
+      qrDataUrl = null;
+      sock = null;
+      console.log('[whatsapp] Desconectado. Reconectar:', shouldReconnect);
+
+      if (shouldReconnect) {
+        setTimeout(initWhatsApp, 5000);
+      } else {
+        // Logged out — limpiar credenciales para mostrar QR nuevo la próxima vez
+        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+      }
+    }
   });
 }
+
+function disconnectWhatsApp() {
+  _stopReconnect = true;
+  if (sock) {
+    sock.logout().catch(() => {});
+    sock = null;
+  }
+  status = 'disconnected';
+  qrDataUrl = null;
+  fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+}
+
+// ── Enviar mensaje ────────────────────────────────────────────────────────────
 
 async function sendMessage(groupId, message) {
-  if (!client || status !== 'ready') throw new Error('WhatsApp no está conectado');
-  await client.sendMessage(groupId, message);
+  if (!sock || status !== 'ready') throw new Error('WhatsApp no está conectado');
+  // Baileys requiere JID completo. Si no trae @, agregarlo
+  const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
+  await sock.sendMessage(jid, { text: message });
 }
 
+// ── Listar grupos ─────────────────────────────────────────────────────────────
+
 async function getChats() {
-  if (!client || status !== 'ready') return [];
-  const chats = await client.getChats();
-  return chats
-    .filter((c) => c.isGroup)
-    .map((c) => ({ id: c.id._serialized, name: c.name }));
+  if (!sock || status !== 'ready') return [];
+  try {
+    const groups = await sock.groupFetchAllParticipating();
+    return Object.entries(groups).map(([id, g]) => ({ id, name: g.subject }));
+  } catch { return []; }
 }
+
+// ── Construir mensaje recordatorio ────────────────────────────────────────────
 
 function buildRecordatorioMsg({ rama, trabajadores, registros, semanaLabel }) {
   const recordMap = Object.fromEntries(registros.map((r) => [r.trabajador_id, r]));
@@ -105,7 +136,10 @@ function buildRecordatorioMsg({ rama, trabajadores, registros, semanaLabel }) {
     const rec = recordMap[t.id];
     const dias = rec ? DIAS_KEYS.reduce((s, d) => s + (rec.dias?.[d] || 0), 0) : 0;
     if (dias === 0) sinDias.push(t.nombre);
-    if (rec?.anticipo > 0) conAnticipo.push(`${t.nombre} ($${rec.anticipo.toFixed(2)})`);
+    const anticipo = Array.isArray(rec?.anticipos)
+      ? rec.anticipos.reduce((s, a) => s + a.monto, 0)
+      : (rec?.anticipo || 0);
+    if (anticipo > 0) conAnticipo.push(`${t.nombre} ($${anticipo.toFixed(2)})`);
   }
 
   let msg = `📋 *Recordatorio de Nómina — ${semanaLabel}*\n`;
@@ -128,6 +162,8 @@ function buildRecordatorioMsg({ rama, trabajadores, registros, semanaLabel }) {
   msg += `_Sistema de Nómina — Grupo Muñoz_`;
   return msg;
 }
+
+// ── Enviar recordatorios a todas las ramas ────────────────────────────────────
 
 async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel }) {
   if (status !== 'ready') {
@@ -158,4 +194,13 @@ async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel
   return { ok: true, resultados };
 }
 
-module.exports = { initWhatsApp, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };
+module.exports = {
+  initWhatsApp,
+  disconnectWhatsApp,
+  getStatus,
+  getChats,
+  sendMessage,
+  enviarRecordatorios,
+  loadGrupos,
+  saveGrupos,
+};

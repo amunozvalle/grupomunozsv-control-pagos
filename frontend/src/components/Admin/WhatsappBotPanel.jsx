@@ -53,6 +53,13 @@ export default function WhatsappBotPanel({ ramas }) {
     setIniciando(false);
   }
 
+  async function desconectar() {
+    if (!confirm('¿Cerrar sesión de WhatsApp?')) return;
+    await fetch('/api/whatsapp/bot/disconnect', { method: 'POST' });
+    setStatus({ status: 'disconnected', hasQr: false, qr: null });
+    setChats([]);
+  }
+
   async function guardar() {
     setGuardando(true);
     await fetch('/api/whatsapp/bot/grupos', {
@@ -70,7 +77,7 @@ export default function WhatsappBotPanel({ ramas }) {
   }
 
   const statusColor = { ready: 'var(--green)', qr: 'var(--gold)', connecting: 'var(--gold)', disconnected: 'var(--red)' };
-  const statusLabel = { ready: '✓ Conectado', qr: 'Esperando escaneo QR', connecting: 'Conectando...', disconnected: 'Desconectado' };
+  const statusLabel = { ready: '✓ Conectado', qr: '📱 Escanea el código QR', connecting: 'Conectando...', disconnected: '● Desconectado' };
 
   return (
     <div>
@@ -89,7 +96,10 @@ export default function WhatsappBotPanel({ ramas }) {
             </button>
           )}
           {status?.status === 'ready' && (
-            <button className="btn btn-outline" onClick={recargarGrupos}>↻ Recargar grupos</button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn-outline" onClick={recargarGrupos}>↻ Recargar grupos</button>
+              <button className="btn btn-outline" style={{ color: 'var(--red)', borderColor: 'var(--red)' }} onClick={desconectar}>✕ Cerrar sesión</button>
+            </div>
           )}
         </div>
 
