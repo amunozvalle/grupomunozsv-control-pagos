@@ -82,6 +82,13 @@ const PORT = Number(process.env.PORT) || 3001;
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 
+  // Auto-reconectar WhatsApp si hay credenciales guardadas
+  const AUTH_DIR = path.join(__dirname, '.baileys_auth');
+  if (fs.existsSync(AUTH_DIR)) {
+    console.log('[whatsapp] Credenciales encontradas — reconectando automáticamente...');
+    initWhatsApp().catch(err => console.error('[whatsapp] Error al reconectar:', err.message));
+  }
+
   // ── Backup diario a las 11 PM (El Salvador) ────────────────────────────
   const msHasta11pm = () => {
     const now = new Date();
