@@ -133,20 +133,10 @@ async function getChats() {
   } catch { return []; }
 }
 
-function buildRecordatorioMsg({ rama, trabajadores, registros, semanaLabel }) {
-  const recordMap = Object.fromEntries(registros.map((r) => [r.trabajador_id, r]));
-  const DIAS_KEYS = ['L', 'M', 'X', 'J', 'V', 'S'];
-  const sinDias = [];
-  for (const t of trabajadores) {
-    if (t.rama !== rama) continue;
-    const rec = recordMap[t.id];
-    const dias = rec ? DIAS_KEYS.reduce((s, d) => s + (rec.dias?.[d] || 0), 0) : 0;
-    if (dias === 0) sinDias.push(t.nombre);
-  }
-  let msg = `📋 *Recordatorio de Nómina — ${semanaLabel}*\nPor favor llenar la hoja de trabajo para el *sábado*.\n\n`;
-  if (sinDias.length > 0) { msg += `⚠️ *Sin días registrados:*\n`; sinDias.forEach(n => msg += `  • ${n}\n`); msg += '\n'; }
-  else msg += `✅ Todos tienen días registrados.\n\n`;
-  msg += `_Sistema de Nómina — Grupo Muñoz_`;
+function buildRecordatorioMsg({ semanaLabel }) {
+  let msg = `📋 *Recordatorio de Nómina — ${semanaLabel}*\n`;
+  msg += `Buenos días a todos. Por favor recuerden llenar su hoja de trabajo del sábado antes de terminar el día.\n\n`;
+  msg += `Gracias 🙏`;
   return msg;
 }
 
@@ -156,7 +146,7 @@ async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel
   for (const rama of ramas) {
     const groupId = grupos[rama.id];
     if (!groupId) { resultados.push({ rama: rama.label, ok: false, error: 'Sin grupo' }); continue; }
-    try { await sendMessage(groupId, buildRecordatorioMsg({ rama: rama.id, trabajadores, registros, semanaLabel })); resultados.push({ rama: rama.label, ok: true }); }
+    try { await sendMessage(groupId, buildRecordatorioMsg({ semanaLabel })); resultados.push({ rama: rama.label, ok: true }); }
     catch (err) { resultados.push({ rama: rama.label, ok: false, error: err.message }); }
   }
   return { ok: true, resultados };

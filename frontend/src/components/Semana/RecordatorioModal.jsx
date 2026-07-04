@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { DIAS_KEYS, formatSemanaWhatsappNatural } from '../../utils/week';
+import { formatSemanaWhatsappNatural } from '../../utils/week';
 
 export default function RecordatorioModal({ trabajadores, registros, semanaKey, onClose }) {
   const [copied, setCopied] = useState(false);
   const [botStatus, setBotStatus] = useState(null);
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
-
-  const recordMap = Object.fromEntries(registros.map((r) => [r.trabajador_id, r]));
-
-  const sinRegistro = trabajadores.filter((t) => {
-    const rec = recordMap[t.id];
-    if (!rec) return true;
-    const dias = DIAS_KEYS.reduce((s, d) => s + (rec.dias?.[d] || 0), 0);
-    return dias === 0;
-  });
 
   const semanaLabel = formatSemanaWhatsappNatural(semanaKey);
 
@@ -23,11 +14,6 @@ export default function RecordatorioModal({ trabajadores, registros, semanaKey, 
   lines.push('');
   lines.push('Buenos días a todos. Por favor recuerden llenar su hoja de trabajo del sábado antes de terminar el día.');
   lines.push('');
-  if (sinRegistro.length > 0) {
-    lines.push('⚠️ *Sin días registrados esta semana:*');
-    sinRegistro.forEach((t) => lines.push(`  • ${t.nombre}`));
-    lines.push('');
-  }
   lines.push('Gracias 🙏');
   const mensaje = lines.join('\n');
 
@@ -78,14 +64,6 @@ export default function RecordatorioModal({ trabajadores, registros, semanaKey, 
               Copia este mensaje y pégalo en tu grupo de WhatsApp. Para envío automático, configura el bot en la pestaña <strong>Admins → WhatsApp Bot</strong>.
             </div>
           )}
-
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '0.75rem', marginBottom: '1rem', fontSize: '0.82rem' }}>
-            <div style={{ color: 'var(--text-dim)', marginBottom: '0.35rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Sin registro ({sinRegistro.length})</div>
-            {sinRegistro.length === 0
-              ? <span style={{ color: 'var(--green)' }}>Todos tienen registro ✓</span>
-              : sinRegistro.map((t) => <div key={t.id} style={{ color: 'var(--red)' }}>• {t.nombre}</div>)
-            }
-          </div>
 
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '1rem', whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text)', marginBottom: '1rem' }}>
             {mensaje}
