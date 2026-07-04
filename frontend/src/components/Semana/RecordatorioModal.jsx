@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fmt, DIAS_KEYS, formatSemanaWhatsappNatural } from '../../utils/week';
+import { DIAS_KEYS, formatSemanaWhatsappNatural } from '../../utils/week';
 
 export default function RecordatorioModal({ trabajadores, registros, semanaKey, onClose }) {
   const [copied, setCopied] = useState(false);
@@ -16,23 +16,6 @@ export default function RecordatorioModal({ trabajadores, registros, semanaKey, 
     return dias === 0;
   });
 
-  const conAnticipo = trabajadores
-    .filter((t) => {
-      const rec = recordMap[t.id];
-      if (!rec) return false;
-      const totalAnticipo = rec.anticipos?.length
-        ? rec.anticipos.reduce((s, a) => s + a.monto, 0)
-        : (rec.anticipo || 0);
-      return totalAnticipo > 0;
-    })
-    .map((t) => {
-      const rec = recordMap[t.id];
-      const totalAnticipo = rec.anticipos?.length
-        ? rec.anticipos.reduce((s, a) => s + a.monto, 0)
-        : (rec.anticipo || 0);
-      return { ...t, anticipo: totalAnticipo };
-    });
-
   const semanaLabel = formatSemanaWhatsappNatural(semanaKey);
 
   const lines = [];
@@ -43,11 +26,6 @@ export default function RecordatorioModal({ trabajadores, registros, semanaKey, 
   if (sinRegistro.length > 0) {
     lines.push('⚠️ *Sin días registrados esta semana:*');
     sinRegistro.forEach((t) => lines.push(`  • ${t.nombre}`));
-    lines.push('');
-  }
-  if (conAnticipo.length > 0) {
-    lines.push('💰 *Con adelanto pendiente:*');
-    conAnticipo.forEach((t) => lines.push(`  • ${t.nombre} (-$${fmt(t.anticipo)})`));
     lines.push('');
   }
   lines.push('Gracias 🙏');
@@ -101,21 +79,12 @@ export default function RecordatorioModal({ trabajadores, registros, semanaKey, 
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem', fontSize: '0.82rem' }}>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '0.75rem' }}>
-              <div style={{ color: 'var(--text-dim)', marginBottom: '0.35rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Sin registro ({sinRegistro.length})</div>
-              {sinRegistro.length === 0
-                ? <span style={{ color: 'var(--green)' }}>Todos tienen registro ✓</span>
-                : sinRegistro.map((t) => <div key={t.id} style={{ color: 'var(--red)' }}>• {t.nombre}</div>)
-              }
-            </div>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '0.75rem' }}>
-              <div style={{ color: 'var(--text-dim)', marginBottom: '0.35rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Con adelanto ({conAnticipo.length})</div>
-              {conAnticipo.length === 0
-                ? <span style={{ color: 'var(--green)' }}>Sin adelantos ✓</span>
-                : conAnticipo.map((t) => <div key={t.id} style={{ color: 'var(--gold)' }}>• {t.nombre} <span style={{ color: 'var(--red)' }}>-${fmt(t.anticipo)}</span></div>)
-              }
-            </div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '0.75rem', marginBottom: '1rem', fontSize: '0.82rem' }}>
+            <div style={{ color: 'var(--text-dim)', marginBottom: '0.35rem', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Sin registro ({sinRegistro.length})</div>
+            {sinRegistro.length === 0
+              ? <span style={{ color: 'var(--green)' }}>Todos tienen registro ✓</span>
+              : sinRegistro.map((t) => <div key={t.id} style={{ color: 'var(--red)' }}>• {t.nombre}</div>)
+            }
           </div>
 
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '1rem', whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text)', marginBottom: '1rem' }}>

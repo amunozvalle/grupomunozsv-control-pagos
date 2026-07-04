@@ -122,19 +122,16 @@ async function getChats() {
 function buildRecordatorioMsg({ rama, trabajadores, registros, semanaLabel }) {
   const recordMap = Object.fromEntries(registros.map((r) => [r.trabajador_id, r]));
   const DIAS_KEYS = ['L', 'M', 'X', 'J', 'V', 'S'];
-  const sinDias = [], conAnticipo = [];
+  const sinDias = [];
   for (const t of trabajadores) {
     if (t.rama !== rama) continue;
     const rec = recordMap[t.id];
     const dias = rec ? DIAS_KEYS.reduce((s, d) => s + (rec.dias?.[d] || 0), 0) : 0;
     if (dias === 0) sinDias.push(t.nombre);
-    const anticipo = Array.isArray(rec?.anticipos) ? rec.anticipos.reduce((s, a) => s + a.monto, 0) : (rec?.anticipo || 0);
-    if (anticipo > 0) conAnticipo.push(`${t.nombre} ($${anticipo.toFixed(2)})`);
   }
   let msg = `📋 *Recordatorio de Nómina — ${semanaLabel}*\nPor favor llenar la hoja de trabajo para el *sábado*.\n\n`;
   if (sinDias.length > 0) { msg += `⚠️ *Sin días registrados:*\n`; sinDias.forEach(n => msg += `  • ${n}\n`); msg += '\n'; }
   else msg += `✅ Todos tienen días registrados.\n\n`;
-  if (conAnticipo.length > 0) { msg += `💵 *Con adelanto pendiente:*\n`; conAnticipo.forEach(n => msg += `  • ${n}\n`); msg += '\n'; }
   msg += `_Sistema de Nómina — Grupo Muñoz_`;
   return msg;
 }
