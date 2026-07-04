@@ -215,7 +215,19 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           <button className="btn btn-outline btn-sm no-print" onClick={exportarCSV} disabled={filas.length === 0}>
             📥 CSV
           </button>
-          <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, padding: '0.5rem 1rem' }} onClick={() => window.print()}>🖨 Imprimir</button>
+          <button className="btn btn-outline btn-sm no-print" style={{ minHeight: 44, padding: '0.5rem 1rem' }} onClick={() => {
+            const prev = document.title;
+            if (filtro === 'dia') {
+              const d = new Date(diaSeleccionado + 'T12:00:00');
+              document.title = `Nomina_${d.toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' })}`;
+            } else if (filtro === 'semana') {
+              document.title = `Nomina_Semana_${semanaKey}`;
+            } else {
+              document.title = `Nomina_${MESES[mesMonth - 1]}_${mesYear}`;
+            }
+            window.print();
+            setTimeout(() => { document.title = prev; }, 1000);
+          }}>🖨 Imprimir</button>
         </div>
       </div>
 
