@@ -105,19 +105,26 @@ function disconnectWhatsApp() {
   fs.rmSync(AUTH_DIR, { recursive: true, force: true });
 }
 
-async function sendMessage(groupId, message, retries = 3) {
+async function sendMessage(groupId, message, retries = 5) {
   if (!sock || status !== 'ready') throw new Error('WhatsApp no está conectado');
   const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
+
+  // Pre-calentar la sesión obteniendo metadata del grupo
+  try { await sock.groupMetadata(jid); } catch (_) {}
+
+  const delays = [5000, 10000, 15000, 20000];
   for (let i = 0; i < retries; i++) {
     try {
       await sock.sendMessage(jid, { text: message });
       return;
     } catch (err) {
       const isNoSession = err?.message?.toLowerCase().includes('no sessions') ||
-                          err?.message?.toLowerCase().includes('nosessions');
+                          err?.message?.toLowerCase().includes('nosessions') ||
+                          err?.message?.toLowerCase().includes('no session');
       if (isNoSession && i < retries - 1) {
-        console.log(`[whatsapp] "No sessions" en intento ${i + 1}, reintentando en 3s...`);
-        await new Promise(r => setTimeout(r, 3000));
+        const wait = delays[i] || 20000;
+        console.log(`[whatsapp] "No sessions" en intento ${i + 1}, reintentando en ${wait / 1000}s...`);
+        await new Promise(r => setTimeout(r, wait));
       } else {
         throw err;
       }
