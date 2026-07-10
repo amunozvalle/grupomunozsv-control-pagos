@@ -69,9 +69,15 @@ async function initWhatsApp() {
     }
 
     if (connection === 'open') {
-      status = 'ready';
+      status = 'connecting';
       qrDataUrl = null;
-      console.log('[whatsapp] ✓ Conectado a WhatsApp');
+      console.log('[whatsapp] Autenticado — sincronizando sesión (12s)...');
+      setTimeout(() => {
+        if (status === 'connecting') {
+          status = 'ready';
+          console.log('[whatsapp] ✓ Listo para enviar');
+        }
+      }, 12000);
     }
 
     if (connection === 'close') {
