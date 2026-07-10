@@ -54,7 +54,6 @@ export default function WhatsappBotPanel({ ramas }) {
   }
 
   async function desconectar() {
-    if (!confirm('¿Cerrar sesión de WhatsApp?')) return;
     await fetch('/api/whatsapp/bot/disconnect', { method: 'POST' });
     setStatus({ status: 'disconnected', hasQr: false, qr: null });
     setChats([]);
@@ -88,7 +87,6 @@ export default function WhatsappBotPanel({ ramas }) {
   }
 
   async function enviarRecordatorio() {
-    if (!confirm('¿Enviar recordatorio ahora a todos los grupos configurados?')) return;
     const { semanaKey, semanaLabel } = getSemanaInfo();
     try {
       const res = await fetch('/api/whatsapp/bot/recordatorio', {
