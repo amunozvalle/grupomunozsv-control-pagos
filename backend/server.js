@@ -83,7 +83,9 @@ app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 
   // Auto-reconectar WhatsApp si hay credenciales guardadas
-  const AUTH_DIR = path.join(__dirname, '.baileys_auth');
+  // DATA_DIR debe coincidir con el usado en whatsapp-bot.js
+  const DATA_DIR = process.env.DATA_DIR || __dirname;
+  const AUTH_DIR = path.join(DATA_DIR, '.baileys_auth');
   if (fs.existsSync(AUTH_DIR)) {
     console.log('[whatsapp] Credenciales encontradas — reconectando automáticamente...');
     initWhatsApp().catch(err => console.error('[whatsapp] Error al reconectar:', err.message));
@@ -157,3 +159,4 @@ app.listen(PORT, () => {
     setTimeout(scheduleSabado, 7 * 24 * 60 * 60 * 1000);
   }, msHastaSabado7am());
 });
+
