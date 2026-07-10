@@ -105,6 +105,14 @@ function disconnectWhatsApp() {
   fs.rmSync(AUTH_DIR, { recursive: true, force: true });
 }
 
+function resetWhatsApp() {
+  _stopReconnect = true;
+  sock = null;
+  status = 'disconnected';
+  qrDataUrl = null;
+  try { fs.rmSync(AUTH_DIR, { recursive: true, force: true }); } catch {}
+}
+
 async function sendMessage(groupId, message, retries = 5) {
   if (!sock || status !== 'ready') throw new Error('WhatsApp no está conectado');
   const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
@@ -159,4 +167,4 @@ async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel
   return { ok: true, resultados };
 }
 
-module.exports = { initWhatsApp, disconnectWhatsApp, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };
+module.exports = { initWhatsApp, disconnectWhatsApp, resetWhatsApp, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };
