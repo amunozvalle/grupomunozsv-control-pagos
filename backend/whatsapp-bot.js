@@ -37,7 +37,6 @@ function getStatus() {
 async function initWhatsApp() {
   if (sock && status === 'ready') return;
   _stopReconnect = false;
-  try { fs.rmSync(AUTH_DIR, { recursive: true, force: true }); console.log("[whatsapp] DISCO LIMPIADO CON ÉXITO"); } catch(e){}
   if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
 
   const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
