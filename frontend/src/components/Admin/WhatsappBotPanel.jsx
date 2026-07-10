@@ -76,6 +76,32 @@ export default function WhatsappBotPanel({ ramas }) {
     await fetchGrupos();
   }
 
+  async function enviarRecordatorio() {
+    if (!confirm('¿Enviar recordatorio ahora a todos los grupos configurados?')) return;
+    const now = new Date();
+    const svDate = now.toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' });
+    const svDay = new Date(svDate + 'T12:00:00');
+    const mon = new Date(svDay);
+    mon.setDate(svDay.getDate() - ((svDay.getDay() + 6) % 7));
+    const semanaKey = mon.toISOString().slice(0, 10);
+    const semanaLabel = `${mon.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} - ${svDay.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}`;
+    try {
+      const res = await fetch('/api/whatsapp/bot/recordatorio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ semanaKey, semanaLabel }),
+      });
+      const data = await res.json();
+      const ok = data.resultados?.filter(r => r.ok).length || 0;
+      const fail = data.resultados?.filter(r => !r.ok) || [];
+      let msg = `✓ Enviado a ${ok} grupo(s).`;
+      if (fail.length) msg += '\nFallidos: ' + fail.map(r => `${r.rama}: ${r.error}`).join(', ');
+      alert(msg);
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+
   const statusColor = { ready: 'var(--green)', qr: 'var(--gold)', connecting: 'var(--gold)', disconnected: 'var(--red)' };
   const statusLabel = { ready: '✓ Conectado', qr: '📱 Escanea el código QR', connecting: 'Conectando...', disconnected: '● Desconectado' };
 
@@ -96,7 +122,8 @@ export default function WhatsappBotPanel({ ramas }) {
             </button>
           )}
           {status?.status === 'ready' && (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={enviarRecordatorio}>📨 Enviar recordatorio ahora</button>
               <button className="btn btn-outline" onClick={recargarGrupos}>↻ Recargar grupos</button>
               <button className="btn btn-outline" style={{ color: 'var(--red)', borderColor: 'var(--red)' }} onClick={desconectar}>✕ Cerrar sesión</button>
             </div>
