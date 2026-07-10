@@ -76,8 +76,7 @@ export default function WhatsappBotPanel({ ramas }) {
     await fetchGrupos();
   }
 
-  async function enviarRecordatorio() {
-    if (!confirm('¿Enviar recordatorio ahora a todos los grupos configurados?')) return;
+  function getSemanaInfo() {
     const now = new Date();
     const svDate = now.toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' });
     const svDay = new Date(svDate + 'T12:00:00');
@@ -85,6 +84,12 @@ export default function WhatsappBotPanel({ ramas }) {
     mon.setDate(svDay.getDate() - ((svDay.getDay() + 6) % 7));
     const semanaKey = mon.toISOString().slice(0, 10);
     const semanaLabel = `${mon.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} - ${svDay.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}`;
+    return { semanaKey, semanaLabel };
+  }
+
+  async function enviarRecordatorio() {
+    if (!confirm('¿Enviar recordatorio ahora a todos los grupos configurados?')) return;
+    const { semanaKey, semanaLabel } = getSemanaInfo();
     try {
       const res = await fetch('/api/whatsapp/bot/recordatorio', {
         method: 'POST',
@@ -97,6 +102,23 @@ export default function WhatsappBotPanel({ ramas }) {
       let msg = `✓ Enviado a ${ok} grupo(s).`;
       if (fail.length) msg += '\nFallidos: ' + fail.map(r => `${r.rama}: ${r.error}`).join(', ');
       alert(msg);
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+
+  async function enviarAGrupo(groupId, ramaLabel) {
+    if (!groupId) { alert('Este grupo no tiene WhatsApp asignado.'); return; }
+    const { semanaLabel } = getSemanaInfo();
+    try {
+      const res = await fetch('/api/whatsapp/bot/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupId, message: `📋 *Recordatorio de Nómina — ${semanaLabel}*\nBuenos días a todos. Por favor recuerden llenar su hoja de trabajo del sábado antes de terminar el día.\n\nGracias 🙏` }),
+      });
+      const data = await res.json();
+      if (data.ok) alert(`✓ Enviado a ${ramaLabel}`);
+      else alert(`Error: ${data.error}`);
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -161,7 +183,7 @@ export default function WhatsappBotPanel({ ramas }) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {ramas.map((rama) => (
-              <div key={rama.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div key={rama.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ minWidth: 140, display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                   <span className="dot" style={{ background: rama.color }} />
                   {rama.emoji} {rama.label}
@@ -177,6 +199,11 @@ export default function WhatsappBotPanel({ ramas }) {
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
+                <button
+                  className="btn btn-outline btn-sm"
+                  title={`Enviar recordatorio a ${rama.label}`}
+                  onClick={() => enviarAGrupo(configurados[rama.id], rama.label)}
+                >📨</button>
               </div>
             ))}
           </div>
