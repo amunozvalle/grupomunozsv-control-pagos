@@ -338,3 +338,9 @@ router.post('/bot/disconnect', (req, res) => {
   bot.disconnectWhatsApp();
   res.json({ ok: true });
 });
+
+// Reset forzado — borra credenciales sin intentar logout
+router.post('/bot/reset', (req, res) => {
+  bot.resetWhatsApp();
+  res.json({ ok: true });
+});
