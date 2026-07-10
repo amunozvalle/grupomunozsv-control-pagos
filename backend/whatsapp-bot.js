@@ -43,7 +43,7 @@ async function initWhatsApp() {
   const { version, isLatest } = await fetchLatestBaileysVersion();
   console.log(`[whatsapp] Baileys v${version.join('.')} isLatest:${isLatest}`);
 
-  const logger = pinn({ level: 'warn' });
+  const logger = pino({ level: 'warn' });
 
   sock = makeWASocket({
     version,
