@@ -19,6 +19,7 @@ let sock = null;
 let qrDataUrl = null;
 let status = 'disconnected';
 let _stopReconnect = false;
+let _sendLock = false;
 
 function loadGrupos() {
   if (!fs.existsSync(GRUPOS_PATH)) return {};
@@ -42,7 +43,7 @@ async function initWhatsApp() {
   const { version, isLatest } = await fetchLatestBaileysVersion();
   console.log(`[whatsapp] Baileys v${version.join('.')} isLatest:${isLatest}`);
 
-  const logger = pino({ level: 'warn' });
+  const logger = pinn({ level: 'warn' });
 
   sock = makeWASocket({
     version,
@@ -54,6 +55,7 @@ async function initWhatsApp() {
     logger,
     printQRInTerminal: true,
     connectTimeoutMs: 60000,
+    keepAliveIntervalMs: 10000,
     retryRequestDelayMs: 2000,
     getMessage: async () => undefined,
   });
@@ -66,39 +68,36 @@ async function initWhatsApp() {
     if (qr) {
       status = 'qr';
       qrDataUrl = await qrcode.toDataURL(qr);
-      console.log('[whatsapp] ✓ QR generado');
+      console.log('[whatsapp] QR generado');
     }
 
     if (connection === 'open') {
       status = 'connecting';
       qrDataUrl = null;
-      console.log('[whatsapp] Autenticado — esperando sincronización de sesión...');
+      console.log('[whatsapp] Autenticado - esperando sincronizacion');
 
-      // Trigger session key distribution via presence
       setTimeout(async () => {
         try { await sock.sendPresenceUpdate('available'); } catch (_) {}
       }, 2000);
 
-      // Wait for messaging-history.set which signals session is ready
       const onHistorySet = () => {
-        console.log('[whatsapp] Historial recibido — esperando 5s más...');
+        console.log('[whatsapp] Historial recibido - esperando 5s');
         if (status === 'connecting') {
           setTimeout(() => {
             if (status === 'connecting') {
               status = 'ready';
-              console.log('[whatsapp] ✓ Listo para enviar');
+              console.log('[whatsapp] Listo para enviar');
             }
           }, 5000);
         }
       };
       sock.ev.on('messaging-history.set', onHistorySet);
 
-      // Fallback: 60 seconds
       setTimeout(() => {
         if (status === 'connecting') {
           sock.ev.off('messaging-history.set', onHistorySet);
           status = 'ready';
-          console.log('[whatsapp] ✓ Listo (timeout 60s)');
+          console.log('[whatsapp] Listo (timeout 60s)');
         }
       }, 60000);
     }
@@ -106,7 +105,7 @@ async function initWhatsApp() {
     if (connection === 'close') {
       const code = lastDisconnect?.error?.output?.statusCode;
       const reason = lastDisconnect?.error?.message || 'desconocido';
-      console.log(`[whatsapp] Desconectado. Código: ${code} | Razón: ${reason}`);
+      console.log(`[whatsapp] Desconectado. Codigo: ${code} | Razon: ${reason}`);
 
       const loggedOut = code === DisconnectReason.loggedOut;
       const shouldReconnect = !_stopReconnect && !loggedOut;
@@ -116,10 +115,10 @@ async function initWhatsApp() {
       sock = null;
 
       if (loggedOut) {
-        console.log('[whatsapp] Sesión cerrada — limpiando credenciales');
+        console.log('[whatsapp] Sesion cerrada - limpiando');
         fs.rmSync(AUTH_DIR, { recursive: true, force: true });
       } else if (shouldReconnect) {
-        console.log('[whatsapp] Reintentando en 5s...');
+        console.log('[whatsapp] Reintentando en 5s');
         setTimeout(initWhatsApp, 5000);
       }
     }
@@ -139,6 +138,7 @@ function resetWhatsApp() {
   sock = null;
   status = 'disconnected';
   qrDataUrl = null;
+  _sendLock = false;
   try { fs.rmSync(AUTH_DIR, { recursive: true, force: true }); } catch {}
 }
 
@@ -151,64 +151,65 @@ async function waitForReady(timeoutMs = 90000) {
   return false;
 }
 
-async function sendMessage(groupId, message, retries = 8) {
-  if (!sock || status !== 'ready') throw new Error('WhatsApp no está conectado');
-  const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
+async function sendMessage(groupId, message, retries = 5) {
+  if (!sock || status !== 'ready') throw new Error('WhatsApp no esta conectado');
 
-  // Fetch group members and assert signal sessions
-  let memberJids = [];
-  try {
-    const currentSock = sock;
-    const meta = await currentSock.groupMetadata(jid);
-    console.log(`[whatsapp] Grupo: ${meta.subject}, participantes: ${meta.participants.length}`);
-    memberJids = meta.participants.map(p => p.id);
-    if (memberJids.length && typeof currentSock.assertSessions === 'function') {
-      console.log(`[whatsapp] Pre-calentando sesiones para ${memberJids.length} participantes...`);
-      await currentSock.assertSessions(memberJids, true);
-      console.log(`[whatsapp] Sesiones afirmadas — esperando 4s`);
-      await new Promise(r => setTimeout(r, 4000));
+  // Prevent concurrent sends
+  if (_sendLock) {
+    console.log('[whatsapp] Otro envio en progreso - esperando...');
+    let waited = 0;
+    while (_sendLock && waited < 120000) {
+      await new Promise(r => setTimeout(r, 1000));
+      waited += 1000;
     }
-  } catch (e) {
-    console.log(`[whatsapp] pre-warm warning: ${e.message}`);
+    if (_sendLock) throw new Error('Otro envio en progreso, intenta de nuevo');
   }
 
-  const delays = [3000, 6000, 10000, 15000, 20000, 25000, 30000];
-  for (let i = 0; i < retries; i++) {
-    // Always use fresh sock reference (may change after reconnect)
-    const currentSock = sock;
-    if (!currentSock || status !== 'ready') {
-      console.log(`[whatsapp] Socket no disponible en intento ${i + 1} — esperando reconexión...`);
-      const recovered = await waitForReady(90000);
-      if (!recovered) throw new Error('WhatsApp no reconectó a tiempo');
-      continue;
-    }
+  _sendLock = true;
+  try {
+    const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
+
+    let memberJids = [];
     try {
-      await currentSock.sendMessage(jid, { text: message });
-      console.log(`[whatsapp] ✓ Mensaje enviado a ${jid}`);
-      return;
-    } catch (err) {
-      console.log(`[whatsapp] Error intento ${i + 1}/${retries}: ${err.message}`);
-      if (i < retries - 1) {
-        // On "No sessions", force re-establish sessions with fresh sock
-        if (err.message?.includes('No sessions') && memberJids.length) {
-          const freshSock = sock;
-          if (freshSock && typeof freshSock.assertSessions === 'function') {
-            try {
-              console.log(`[whatsapp] Forzando re-establecimiento de sesiones...`);
-              await freshSock.assertSessions(memberJids, true);
-              await new Promise(r => setTimeout(r, 5000));
-            } catch (e2) {
-              console.log(`[whatsapp] assertSessions force error: ${e2.message}`);
-            }
-          }
+      const meta = await sock.groupMetadata(jid);
+      console.log(`[whatsapp] Grupo: ${meta.subject}, participantes: ${meta.participants.length}`);
+      memberJids = meta.participants.map(p => p.id);
+      if (memberJids.length && typeof sock.assertSessions === 'function') {
+        console.log('[whatsapp] Pre-calentando sesiones...');
+        await sock.assertSessions(memberJids, false);
+        console.log('[whatsapp] Sesiones afirmadas - esperando 3s');
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    } catch (e) {
+      console.log(`[whatsapp] pre-warm warning: ${e.message}`);
+    }
+
+    const delays = [5000, 10000, 15000, 20000];
+    for (let i = 0; i < retries; i++) {
+      const currentSock = sock;
+      if (!currentSock || status !== 'ready') {
+        console.log(`[whatsapp] Socket no disponible en intento ${i + 1} - esperando...`);
+        const recovered = await waitForReady(90000);
+        if (!recovered) throw new Error('WhatsApp no reconecto a tiempo');
+        continue;
+      }
+      try {
+        await currentSock.sendMessage(jid, { text: message });
+        console.log(`[whatsapp] Mensaje enviado a ${jid}`);
+        return;
+      } catch (err) {
+        console.log(`[whatsapp] Error intento ${i + 1}/${retries}: ${err.message}`);
+        if (i < retries - 1) {
+          const wait = delays[i] || 20000;
+          try { if (sock) await sock.sendPresenceUpdate('available'); } catch (_) {}
+          await new Promise(r => setTimeout(r, wait));
+        } else {
+          throw err;
         }
-        const wait = delays[i] || 30000;
-        try { if (sock) await sock.sendPresenceUpdate('available'); } catch (_) {}
-        await new Promise(r => setTimeout(r, wait));
-      } else {
-        throw err;
       }
     }
+  } finally {
+    _sendLock = false;
   }
 }
 
@@ -221,9 +222,9 @@ async function getChats() {
 }
 
 function buildRecordatorioMsg({ semanaLabel }) {
-  let msg = `📋 *Recordatorio de Nómina — ${semanaLabel}*\n`;
-  msg += `Buenos días a todos. Por favor recuerden llenar su hoja de trabajo del sábado antes de terminar el día.\n\n`;
-  msg += `Gracias 🙏`;
+  let msg = `Recordatorio de Nomina - ${semanaLabel}\n`;
+  msg += `Buenos dias a todos. Por favor recuerden llenar su hoja de trabajo del sabado antes de terminar el dia.\n\n`;
+  msg += `Gracias`;
   return msg;
 }
 
