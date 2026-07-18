@@ -171,7 +171,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       headers = ['Trabajador', 'Rama', 'Días', 'Extra', 'Reembolso', 'Anticipo', 'Total', filtro === 'semana' ? 'Estado' : null].filter(Boolean);
       rows = filas.map(f => {
         const row = [f.t.nombre, ramaMap[f.t.rama]?.label || f.t.rama, f.dias, fmt(f.extra), fmt(f.reembolso), fmt(f.anticipo), fmt(f.pago)];
-        if (filtro === 'semana') row.push(f.r?.pagado ? 'Pagado' : 'Pendiente');
+        if (filtro === 'semana') row.push(f.r?.pagado ? 'Pagado' : (f.dias === 0 && f.pago === 0 ? 'No trabajó' : 'Pendiente'));
         return row;
       });
       const totRow = ['', '', '', '', '', 'TOTAL', fmt(total)];
@@ -345,17 +345,20 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                       <td style={{ textAlign: 'right', fontFamily: 'monospace', color: 'var(--gold)', fontWeight: 700 }}>
                         ${fmt(filtro === 'dia' ? fila.pagoDia : fila.pago)}
                       </td>
-                      {filtro === 'semana' && (
-                        <td style={{ textAlign: 'center' }}>
-                          <span style={{
-                            fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 99,
-                            background: fila.r?.pagado ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.12)',
-                            color: fila.r?.pagado ? 'var(--green)' : 'var(--red)',
-                          }}>
-                            {fila.r?.pagado ? '✓ Pagado' : 'Pendiente'}
-                          </span>
-                        </td>
-                      )}
+                      {filtro === 'semana' && (() => {
+                        const noTrabajo = !fila.r?.pagado && fila.dias === 0 && fila.pago === 0;
+                        return (
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{
+                              fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 99,
+                              background: fila.r?.pagado ? 'rgba(34,197,94,0.15)' : noTrabajo ? 'rgba(148,163,184,0.15)' : 'rgba(239,68,68,0.12)',
+                              color: fila.r?.pagado ? 'var(--green)' : noTrabajo ? 'var(--text-muted)' : 'var(--red)',
+                            }}>
+                              {fila.r?.pagado ? '✓ Pagado' : noTrabajo ? 'No trabajó' : 'Pendiente'}
+                            </span>
+                          </td>
+                        );
+                      })()}
                     </tr>
                   );
                 })}
