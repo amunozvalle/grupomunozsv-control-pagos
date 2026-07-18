@@ -833,6 +833,10 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
     display: block !important;
   }
 
+  .print-only {
+    display: inline !important;
+  }
+
   .badge {
     font-size: 8px !important;
     padding: 1px 4px !important;
