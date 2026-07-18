@@ -197,14 +197,18 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   return (
     <>
       {/* Print header con fecha — solo visible al imprimir */}
-      <div className="print-header" style={{ display: 'none', marginBottom: '0.5rem' }}>
-        <div style={{ fontSize: '16px', fontWeight: 700, textAlign: 'center' }}>
-          GRUPO MUÑOZ — Control de Pagos
+      <div className="print-header" style={{ display: 'none', marginBottom: '0.6rem' }}>
+        <div style={{ fontSize: '17px', fontWeight: 700, textAlign: 'center', letterSpacing: '0.03em' }}>
+          GRUPO MUÑOZ — CONTROL DE PAGOS
         </div>
-        <div style={{ fontSize: '13px', textAlign: 'center', marginTop: '2px', color: '#444' }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, textAlign: 'center', marginTop: '2px', color: '#222' }}>
           {filtro === 'dia' && `Nómina del día ${new Date(diaSeleccionado + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}`}
           {filtro === 'semana' && `Nómina Semana ${formatSemana(semanaKey)} ${new Date(semanaKey + 'T12:00:00').getFullYear()}`}
           {filtro === 'mes' && `Nómina ${MESES[mesMonth - 1]} ${mesYear}`}
+        </div>
+        <div style={{ borderBottom: '1.5px solid #000', margin: '6px 0 3px' }} />
+        <div style={{ fontSize: '9px', color: '#777', textAlign: 'right' }}>
+          Generado el {new Date().toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' })}, {new Date().toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
 
@@ -232,7 +236,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       </div>
 
       {/* Barra de filtros */}
-      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+      <div className="no-print" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
 
         {/* Tipo de filtro */}
         <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
@@ -301,6 +305,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                   {filtro !== 'dia' && <th style={{ textAlign: 'right' }}>Anticipo</th>}
                   <th style={{ textAlign: 'right' }}>Total</th>
                   {filtro === 'semana' && <th style={{ textAlign: 'center' }}>Estado</th>}
+                  {filtro === 'semana' && <th className="print-only-cell" style={{ textAlign: 'center' }}>Firma</th>}
                 </tr>
               </thead>
               <tbody>
@@ -349,7 +354,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                         const noTrabajo = !fila.r?.pagado && fila.dias === 0 && fila.pago === 0;
                         return (
                           <td style={{ textAlign: 'center' }}>
-                            <span style={{
+                            <span className="estado-badge" style={{
                               fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 99,
                               background: fila.r?.pagado ? 'rgba(34,197,94,0.15)' : noTrabajo ? 'rgba(148,163,184,0.15)' : 'rgba(239,68,68,0.12)',
                               color: fila.r?.pagado ? 'var(--green)' : noTrabajo ? 'var(--text-muted)' : 'var(--red)',
@@ -359,6 +364,11 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                           </td>
                         );
                       })()}
+                      {filtro === 'semana' && (
+                        <td className="print-only-cell" style={{ textAlign: 'center' }}>
+                          <span style={{ display: 'inline-block', width: '65px', borderBottom: '1px solid #000' }}>&nbsp;</span>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -372,6 +382,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                     ${fmt(total)}
                   </td>
                   {filtro === 'semana' && <td />}
+                  {filtro === 'semana' && <td className="print-only-cell" />}
                 </tr>
               </tfoot>
             </table>

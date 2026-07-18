@@ -86,7 +86,7 @@ export default function ReporteAnualTab({ trabajadores, ramas }) {
       </div>
 
       {/* Controles */}
-      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+      <div className="no-print" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <button className="btn btn-icon btn-outline" onClick={() => setYear(y => y - 1)}>‹</button>
           <span style={{ fontWeight: 700, fontSize: '1.1rem', minWidth: 60, textAlign: 'center' }}>{year}</span>
