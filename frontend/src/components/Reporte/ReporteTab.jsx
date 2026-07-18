@@ -305,7 +305,6 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                   {filtro !== 'dia' && <th style={{ textAlign: 'right' }}>Anticipo</th>}
                   <th style={{ textAlign: 'right' }}>Total</th>
                   {filtro === 'semana' && <th style={{ textAlign: 'center' }}>Estado</th>}
-                  {filtro === 'semana' && <th className="print-only-cell" style={{ textAlign: 'center' }}>Firma</th>}
                 </tr>
               </thead>
               <tbody>
@@ -364,11 +363,6 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                           </td>
                         );
                       })()}
-                      {filtro === 'semana' && (
-                        <td className="print-only-cell" style={{ textAlign: 'center' }}>
-                          <span style={{ display: 'inline-block', width: '65px', borderBottom: '1px solid #000' }}>&nbsp;</span>
-                        </td>
-                      )}
                     </tr>
                   );
                 })}
@@ -382,7 +376,6 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                     ${fmt(total)}
                   </td>
                   {filtro === 'semana' && <td />}
-                  {filtro === 'semana' && <td className="print-only-cell" />}
                 </tr>
               </tfoot>
             </table>

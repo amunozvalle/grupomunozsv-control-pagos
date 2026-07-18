@@ -262,7 +262,6 @@ header {
 /* TABLE */
 .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
 table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-.print-only-cell { display: none; }
 thead { background: var(--surface); }
 thead th {
   padding: 0.85rem 1rem;
@@ -836,10 +835,6 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
     display: block !important;
   }
 
-  .print-only-cell {
-    display: table-cell !important;
-  }
-
   .estado-badge {
     background: transparent !important;
     border: 1px solid #999 !important;
@@ -887,6 +882,8 @@ td { padding: 0.8rem 1rem; vertical-align: middle; }
     border: 1px solid #ccc !important;
     border-top: 3px solid #999 !important;
     color: #000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   div[style*="grid"] > div[style*="border-top"] * {
