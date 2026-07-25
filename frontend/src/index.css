@@ -872,8 +872,21 @@ td.num { text-align: right; font-family: 'DM Mono', monospace; }
 
   header,
   .tabs,
+  .sidebar,
+  .sidebar-overlay,
+  .topbar,
+  .menu-btn,
   .no-print {
     display: none !important;
+  }
+
+  .layout { display: block !important; }
+  .main-area { display: block !important; }
+  .content {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
   }
 
   .container {
