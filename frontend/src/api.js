@@ -45,5 +45,6 @@ export const applyWhatsapp = (semana, rows) => req('POST', '/whatsapp/apply', { 
 export const getCobros = () => req('GET', '/cobros');
 
 export const getRegistrarLinks = (semana) => req('GET', `/registrar/links/${semana}`);
+export const getPermanentLink = (trabajadorId) => req('GET', `/registrar/permanent/${trabajadorId}`);
 export const getRegistrarPayload = (token) => req('GET', `/registrar/${token}`);
 export const saveRegistrarPayload = (token, data) => req('POST', `/registrar/${token}`, data);

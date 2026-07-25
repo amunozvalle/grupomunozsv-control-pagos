@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { createTrabajador, updateTrabajador } from '../../api';
+import React, { useState, useEffect } from 'react';
+import { createTrabajador, updateTrabajador, getPermanentLink, PUBLIC_APP_URL } from '../../api';
 
 export default function TrabajadorModal({ trabajador, ramas, onClose, onSaved }) {
   const isNew = !trabajador?.id;
@@ -9,6 +9,34 @@ export default function TrabajadorModal({ trabajador, ramas, onClose, onSaved })
   const [telefono, setTelefono] = useState(trabajador?.telefono || '');
   const [activo, setActivo] = useState(trabajador?.activo !== undefined ? trabajador.activo : true);
   const [saving, setSaving] = useState(false);
+  const [hojaUrl, setHojaUrl] = useState('');
+  const [copiado, setCopiado] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    if (!isNew && trabajador?.id) {
+      getPermanentLink(trabajador.id)
+        .then((data) => {
+          if (!alive) return;
+          const token = data.permanentToken;
+          setHojaUrl(data.permanentUrl || `${PUBLIC_APP_URL}/registrar/${token}`);
+        })
+        .catch(() => {});
+    }
+    return () => { alive = false; };
+  }, [isNew, trabajador?.id]);
+
+  const mensajeWhatsapp = `Hola ${nombre || ''}, este es el enlace fijo de tu hoja de trabajo. Guárdalo (fíjalo) en tu WhatsApp y úsalo cada semana para registrar tus horas.\n\n${hojaUrl}\n\nLlénala y toca Guardar. ¡Gracias!`;
+
+  async function copiar(etiqueta, texto) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(etiqueta);
+      setTimeout(() => setCopiado(''), 1600);
+    } catch {
+      window.prompt('Copia el texto:', texto);
+    }
+  }
 
   const handleSave = async () => {
     if (!nombre.trim() || !rama) return alert('Nombre y especialidad requeridos.');
@@ -101,6 +129,38 @@ export default function TrabajadorModal({ trabajador, ramas, onClose, onSaved })
                     }}
                   >○ Inactivo</button>
                 </div>
+              </div>
+            )}
+            {!isNew && (
+              <div className="form-group full">
+                <label>Enlace fijo de la hoja de trabajo</label>
+                {hojaUrl ? (
+                  <>
+                    <div
+                      className="mono"
+                      style={{
+                        background: 'var(--surface, rgba(255,255,255,0.04))',
+                        border: '1px solid var(--border)', borderRadius: 8,
+                        padding: '0.6rem 0.75rem', fontSize: '0.8rem',
+                        wordBreak: 'break-all', color: 'var(--text-dim)', marginBottom: '0.5rem',
+                      }}
+                    >{hojaUrl}</div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => copiar('link', hojaUrl)}>
+                        {copiado === 'link' ? '✓ Copiado' : 'Copiar link'}
+                      </button>
+                      <button type="button" className="btn btn-primary btn-sm" onClick={() => copiar('wa', mensajeWhatsapp)}>
+                        {copiado === 'wa' ? '✓ Copiado' : 'Copiar mensaje WhatsApp'}
+                      </button>
+                      <a className="btn btn-outline btn-sm" href={hojaUrl} target="_blank" rel="noreferrer">Abrir hoja</a>
+                    </div>
+                    <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: '0.4rem' }}>
+                      Este enlace es fijo: el trabajador lo puede fijar en su WhatsApp y usarlo cada semana.
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>Cargando enlace…</div>
+                )}
               </div>
             )}
           </div>

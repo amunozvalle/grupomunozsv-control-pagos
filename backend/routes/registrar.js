@@ -53,6 +53,18 @@ router.get('/links/:semana', (req, res) => {
   res.json(rows);
 });
 
+// Enlace fijo (permanente) de un solo trabajador — para mostrar en su configuracion
+router.get('/permanent/:trabajadorId', (req, res) => {
+  const trabajador = db.getTrabajador(req.params.trabajadorId);
+  if (!trabajador) return res.status(404).json({ error: 'Trabajador no encontrado' });
+  const permanentToken = createPermanentRegistrarToken(trabajador.id);
+  res.json({
+    trabajadorId: trabajador.id,
+    permanentToken,
+    permanentUrl: withBaseUrl(req, permanentToken),
+  });
+});
+
 router.get('/:token', (req, res) => {
   try {
     const payload = verifyRegistrarToken(req.params.token);
