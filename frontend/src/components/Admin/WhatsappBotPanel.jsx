@@ -59,6 +59,17 @@ export default function WhatsappBotPanel({ ramas }) {
     setChats([]);
   }
 
+  async function reiniciar() {
+    // Borra la sesión atascada y arranca de cero (nuevo QR)
+    await fetch('/api/whatsapp/bot/reset', { method: 'POST' });
+    setStatus({ status: 'disconnected', hasQr: false, qr: null });
+    setChats([]);
+    setTimeout(async () => {
+      await fetch('/api/whatsapp/bot/init', { method: 'POST' });
+      setTimeout(fetchStatus, 2000);
+    }, 800);
+  }
+
   async function guardar() {
     setGuardando(true);
     await fetch('/api/whatsapp/bot/grupos', {
@@ -176,11 +187,17 @@ export default function WhatsappBotPanel({ ramas }) {
               <br /><small>Ajustes → Dispositivos vinculados → Vincular dispositivo</small>
             </div>
             <img src={status.qr} alt="QR WhatsApp" style={{ width: 220, height: 220, borderRadius: 8, background: 'white', padding: 8 }} />
+            <div style={{ marginTop: '0.75rem' }}>
+              <button className="btn btn-outline btn-sm" onClick={reiniciar} title="Genera un código QR nuevo">↻ Generar QR nuevo</button>
+            </div>
           </div>
         )}
 
         {status?.status === 'connecting' && (
-          <div style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>Autenticando... esto puede tardar unos segundos.</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>Autenticando... esto puede tardar unos segundos.</div>
+            <button className="btn btn-outline btn-sm" onClick={reiniciar} title="Si se queda atascado aquí, reinicia y escanea de nuevo">↻ Reiniciar</button>
+          </div>
         )}
       </div>
 
