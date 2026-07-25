@@ -284,13 +284,23 @@ function buildRecordatorioMsg({ semanaLabel }) {
   return msg;
 }
 
-async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel }) {
+// Segundo recordatorio (10 AM) — para quienes aun no han llenado su hoja
+function buildSegundoRecordatorioMsg({ semanaLabel }) {
+  const aviso = AVISOS_BOT[Math.floor(Math.random() * AVISOS_BOT.length)];
+  let msg = `⏰ *Recordatorio de Nómina — ${semanaLabel}*\n\n`;
+  msg += `Este es un recordatorio. Los que aún no han llenado su hoja de trabajo, por favor llénenla.\n\n`;
+  msg += `¡Gracias! 🙏\n\n`;
+  msg += `_${aviso}_`;
+  return msg;
+}
+
+async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel, builder = buildRecordatorioMsg }) {
   if (status !== 'ready') return { ok: false, error: 'WhatsApp no conectado' };
   const grupos = loadGrupos(), resultados = [];
   for (const rama of ramas) {
     const groupId = grupos[rama.id];
     if (!groupId) { resultados.push({ rama: rama.label, ok: false, error: 'Sin grupo' }); continue; }
-    try { await sendMessage(groupId, buildRecordatorioMsg({ semanaLabel })); resultados.push({ rama: rama.label, ok: true }); }
+    try { await sendMessage(groupId, builder({ semanaLabel })); resultados.push({ rama: rama.label, ok: true }); }
     catch (err) { resultados.push({ rama: rama.label, ok: false, error: err.message }); }
   }
   return { ok: true, resultados };
@@ -322,31 +332,43 @@ function svNow() {
   };
 }
 
-// ── Programador: recordatorio automatico cada SABADO a las 8:00 AM (El Salvador) ──
-let _lastFiredDate = null;
+// ── Programador: recordatorios automaticos cada SABADO (hora de El Salvador) ──
+//    8:00 AM  → recordatorio principal
+//    10:00 AM → recordatorio para quienes aun no han llenado
+const _lastFired = {}; // { '2026-07-25:8': true, '2026-07-25:10': true }
 let _schedulerStarted = false;
+
+async function dispararRecordatorio(builder, etiqueta) {
+  if (status !== 'ready') {
+    console.log(`[scheduler] Es hora (${etiqueta}) pero el bot no esta conectado — no se envio`);
+    return;
+  }
+  console.log(`[scheduler] Enviando recordatorio automatico (${etiqueta})...`);
+  const db = require('./store');
+  const trabajadores = db.getTrabajadores();
+  const ramas = db.getRamas();
+  const semanaLabel = getSemanaLabelSV();
+  const res = await enviarRecordatorios({ trabajadores, registros: {}, ramas, semanaLabel, builder });
+  const ok = (res.resultados || []).filter((r) => r.ok).length;
+  console.log(`[scheduler] Recordatorio (${etiqueta}) enviado a ${ok} grupo(s)`);
+}
+
 function startScheduler() {
   if (_schedulerStarted) return;
   _schedulerStarted = true;
-  console.log('[scheduler] Activo — recordatorio automatico sabados 8:00 AM (El Salvador)');
+  console.log('[scheduler] Activo — recordatorios sabados 8:00 AM y 10:00 AM (El Salvador)');
   setInterval(async () => {
     try {
       const { weekday, hour, minute, date } = svNow();
-      // Ventana 8:00–8:04 para no perder el disparo; una sola vez por dia
-      if (weekday === 'Sat' && hour === 8 && minute < 5 && _lastFiredDate !== date) {
-        _lastFiredDate = date;
-        if (status !== 'ready') {
-          console.log('[scheduler] Es hora pero el bot no esta conectado — no se envio');
-          return;
-        }
-        console.log('[scheduler] Enviando recordatorio automatico...');
-        const db = require('./store');
-        const trabajadores = db.getTrabajadores();
-        const ramas = db.getRamas();
-        const semanaLabel = getSemanaLabelSV();
-        const res = await enviarRecordatorios({ trabajadores, registros: {}, ramas, semanaLabel });
-        const ok = (res.resultados || []).filter((r) => r.ok).length;
-        console.log(`[scheduler] Recordatorio enviado a ${ok} grupo(s)`);
+      if (weekday !== 'Sat' || minute >= 5) return; // solo sabados, ventana :00–:04
+
+      if (hour === 8 && !_lastFired[`${date}:8`]) {
+        _lastFired[`${date}:8`] = true;
+        await dispararRecordatorio(buildRecordatorioMsg, '8 AM');
+      }
+      if (hour === 10 && !_lastFired[`${date}:10`]) {
+        _lastFired[`${date}:10`] = true;
+        await dispararRecordatorio(buildSegundoRecordatorioMsg, '10 AM');
       }
     } catch (e) {
       console.log('[scheduler] error:', e.message);
