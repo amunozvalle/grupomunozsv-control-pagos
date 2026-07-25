@@ -106,6 +106,10 @@ router.post('/:token', (req, res) => {
       return res.status(404).json({ error: 'Trabajador no encontrado' });
     }
 
+    if (db.isSemanaCerrada(semana)) {
+      return res.status(423).json({ error: 'Esta semana ya fue cerrada. Contacta al administrador si necesitas cambiar algo.' });
+    }
+
     const { dias, extras, anticipos, reembolsos, extra, anticipo, reembolso, notas, notasDias } = req.body;
     const fields = {
       dias: { ...EMPTY_DIAS, ...(dias || {}) },

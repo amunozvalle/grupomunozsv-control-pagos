@@ -38,6 +38,9 @@ export const getRegistrosMes = (year, month) => req('GET', `/registros/mes/${yea
 export const getRegistrosAnual = (year) => req('GET', `/registros/anual/${year}`);
 export const upsertRegistro = (semana, data) => req('POST', `/registros/${semana}`, data);
 export const deleteRegistro = (semana, trabajadorId) => req('DELETE', `/registros/${semana}/${trabajadorId}`);
+export const getSemanaEstado = (semana) => req('GET', `/registros/${semana}/estado`);
+export const cerrarSemana = (semana) => req('POST', `/registros/${semana}/cerrar`);
+export const abrirSemana = (semana) => req('POST', `/registros/${semana}/abrir`);
 
 export const parseWhatsapp = (text, semana) => req('POST', '/whatsapp/parse', { text, semana });
 export const applyWhatsapp = (semana, rows) => req('POST', '/whatsapp/apply', { semana, rows });

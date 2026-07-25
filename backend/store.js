@@ -105,6 +105,27 @@ const db = {
     save(_db);
   },
 
+  // ── Semanas cerradas (finalizadas) ───────────────────────────────────────
+  isSemanaCerrada(semana) {
+    return Array.isArray(_db.semanasCerradas) && _db.semanasCerradas.includes(semana);
+  },
+  getSemanasCerradas() {
+    return Array.isArray(_db.semanasCerradas) ? [..._db.semanasCerradas] : [];
+  },
+  cerrarSemana(semana) {
+    if (!Array.isArray(_db.semanasCerradas)) _db.semanasCerradas = [];
+    if (!_db.semanasCerradas.includes(semana)) _db.semanasCerradas.push(semana);
+    save(_db);
+    return true;
+  },
+  abrirSemana(semana) {
+    if (Array.isArray(_db.semanasCerradas)) {
+      _db.semanasCerradas = _db.semanasCerradas.filter(s => s !== semana);
+      save(_db);
+    }
+    return true;
+  },
+
   // ── Registros ─────────────────────────────────────────────────────────────
   getRegistros(semana) {
     const week = _db.registros[semana] || {};

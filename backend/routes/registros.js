@@ -27,9 +27,31 @@ router.get('/:semana', (req, res) => {
   res.json(db.getRegistros(req.params.semana));
 });
 
+// GET /api/registros/:semana/estado — saber si la semana está cerrada
+router.get('/:semana/estado', (req, res) => {
+  res.json({ semana: req.params.semana, cerrada: db.isSemanaCerrada(req.params.semana) });
+});
+
+// POST /api/registros/:semana/cerrar — finalizar la semana
+router.post('/:semana/cerrar', (req, res) => {
+  db.cerrarSemana(req.params.semana);
+  db.logAction(req, 'cerrar_semana', { semana: req.params.semana });
+  res.json({ ok: true, cerrada: true });
+});
+
+// POST /api/registros/:semana/abrir — reabrir la semana
+router.post('/:semana/abrir', (req, res) => {
+  db.abrirSemana(req.params.semana);
+  db.logAction(req, 'abrir_semana', { semana: req.params.semana });
+  res.json({ ok: true, cerrada: false });
+});
+
 // POST /api/registros/:semana
 router.post('/:semana', (req, res) => {
   const { semana } = req.params;
+  if (db.isSemanaCerrada(semana)) {
+    return res.status(423).json({ error: 'La semana está cerrada. Reábrela para poder editar.' });
+  }
   const {
     trabajador_id, dias,
     extras, anticipos, reembolsos,
@@ -59,6 +81,9 @@ router.post('/:semana', (req, res) => {
 });
 
 router.delete('/:semana/:trabajador_id', (req, res) => {
+  if (db.isSemanaCerrada(req.params.semana)) {
+    return res.status(423).json({ error: 'La semana está cerrada. Reábrela para poder editar.' });
+  }
   db.deleteRegistro(req.params.semana, req.params.trabajador_id);
   res.json({ ok: true });
 });

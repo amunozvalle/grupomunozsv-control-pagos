@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import SemanaTable from './SemanaTable';
 import PagoModal from './PagoModal';
 import RecordatorioModal from './RecordatorioModal';
 import { formatSemana } from '../../utils/week';
+import { getSemanaEstado, cerrarSemana, abrirSemana } from '../../api';
 
 function fmt(n) {
   return Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -19,6 +20,49 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
   const [cobroMonto, setCobroMonto] = useState('');
   const [cobroGuardando, setCobroGuardando] = useState(false);
   const nombreRef = useRef(null);
+
+  // Estado de semana cerrada
+  const [cerrada, setCerrada] = useState(false);
+  const [cerrandoLoad, setCerrandoLoad] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getSemanaEstado(semanaKey)
+      .then((d) => { if (alive) setCerrada(!!d.cerrada); })
+      .catch(() => { if (alive) setCerrada(false); });
+    return () => { alive = false; };
+  }, [semanaKey]);
+
+  const todoPagado = registros.length > 0 && registros.every((r) => r.pagado);
+
+  async function handleCerrar() {
+    if (!todoPagado) {
+      const pend = registros.filter((r) => !r.pagado).length;
+      if (!confirm(`Aún hay ${pend} pago(s) pendiente(s) esta semana. ¿Cerrar de todos modos? (podrás reabrirla después)`)) return;
+    } else if (!confirm('¿Cerrar y finalizar esta semana? Quedará bloqueada para edición (puedes reabrirla cuando quieras).')) {
+      return;
+    }
+    setCerrandoLoad(true);
+    try {
+      await cerrarSemana(semanaKey);
+      setCerrada(true);
+    } catch (e) {
+      alert('No se pudo cerrar: ' + (e.message || 'error'));
+    }
+    setCerrandoLoad(false);
+  }
+
+  async function handleReabrir() {
+    if (!confirm('¿Reabrir esta semana para poder editar de nuevo?')) return;
+    setCerrandoLoad(true);
+    try {
+      await abrirSemana(semanaKey);
+      setCerrada(false);
+    } catch (e) {
+      alert('No se pudo reabrir: ' + (e.message || 'error'));
+    }
+    setCerrandoLoad(false);
+  }
 
   const ramasFiltradas = filtroRama === 'todos'
     ? trabajadores
@@ -74,6 +118,17 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
           <button className="btn btn-outline btn-sm" onClick={() => setRecordatorioOpen(true)}>
             Recordatorio Sábado
           </button>
+          {!isViewer && (
+            cerrada ? (
+              <button className="btn btn-outline btn-sm" style={{ color: 'var(--gold)', borderColor: 'var(--gold)' }} onClick={handleReabrir} disabled={cerrandoLoad}>
+                🔓 Reabrir semana
+              </button>
+            ) : (
+              <button className={`btn btn-sm ${todoPagado ? 'btn-green' : 'btn-outline'}`} onClick={handleCerrar} disabled={cerrandoLoad}>
+                🔒 Cerrar semana
+              </button>
+            )
+          )}
           <div className="week-nav">
             <button className="btn btn-icon btn-outline" onClick={() => setSemanaOffset((o) => o - 1)}>‹</button>
             <span className="week-label">{formatSemana(semanaKey)}</span>
@@ -103,6 +158,17 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
         />
       </div>
 
+      {cerrada && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.6rem',
+          background: 'var(--gold-dim)', border: '1px solid var(--gold)',
+          borderRadius: 8, padding: '0.7rem 1rem', margin: '0 0 1rem',
+          color: 'var(--gold-light)', fontSize: '0.85rem', fontWeight: 600,
+        }}>
+          🔒 Semana cerrada — finalizada y bloqueada para edición. Usa “Reabrir semana” si necesitas cambiar algo.
+        </div>
+      )}
+
       <SemanaTable
         trabajadores={trabajadoresFiltrados}
         ramas={ramas}
@@ -110,7 +176,7 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
         semanaKey={semanaKey}
         onEdit={(t) => setEditando({ trabajador: t, record: recordMap[t.id] || null })}
         onRefresh={onRefresh}
-        isViewer={isViewer}
+        isViewer={isViewer || cerrada}
       />
 
       {/* ── DINERO RECIBIDO ── */}
