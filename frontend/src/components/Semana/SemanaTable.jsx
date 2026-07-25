@@ -119,7 +119,7 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
               <th>Trabajador</th>
               <th>Rama</th>
               {DIAS_KEYS.map((d) => <th key={d} style={{ textAlign: 'center' }}>{DIAS_LABELS[d]}</th>)}
-              <th style={{ textAlign: 'right' }}>Dias</th>
+              <th style={{ textAlign: 'right' }}>Días</th>
               <th style={{ textAlign: 'right' }}>Extra</th>
               <th style={{ textAlign: 'right' }}>Reembolso</th>
               <th style={{ textAlign: 'right' }}>Anticipo</th>
@@ -140,7 +140,7 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
               const reembolsoVal = Array.isArray(rec?.reembolsos) ? rec.reembolsos.reduce((s, r) => s + r.monto, 0) : (rec?.reembolso || 0);
 
               return (
-                <tr key={t.id}>
+                <tr key={t.id} className={rec ? '' : 'row-empty'}>
                   <td style={{ fontWeight: 500 }}>{t.nombre}</td>
                   <td>
                     {rama ? (
@@ -183,25 +183,25 @@ export default function SemanaTable({ trabajadores, ramas, recordMap, semanaKey,
                   <td style={{ textAlign: 'center' }}>
                     {rec ? (
                       <button
-                        className={`btn btn-sm ${rec.pagado ? 'btn-green' : 'btn-outline'}`}
+                        className={`status ${rec.pagado ? 'paid' : 'pending'}`}
                         onClick={() => !isViewer && handleTogglePagado(t, rec)}
                         disabled={isViewer}
                         title={rec.pagado_at ? `Marcado: ${new Date(rec.pagado_at).toLocaleString()}` : 'Marcar como pagado'}
-                        style={isViewer ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                        style={{ cursor: isViewer ? 'not-allowed' : 'pointer', opacity: isViewer ? 0.6 : 1 }}
                       >
-                        {rec.pagado ? 'Pagado' : 'Pendiente'}
+                        {rec.pagado ? '✓ Pagado' : '● Pendiente'}
                       </button>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Sin registro</span>
+                      <span className="status none">Sin registro</span>
                     )}
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
                       {!isViewer && (
                         <>
-                          <button className="btn btn-icon btn-outline btn-sm" onClick={() => onEdit(t)} title="Editar">Edit</button>
+                          <button className="btn btn-icon btn-outline btn-sm" onClick={() => onEdit(t)} title="Editar">✎</button>
                           {rec && (
-                            <button className="btn btn-icon btn-danger btn-sm" onClick={() => handleDelete(t)} title="Eliminar">Del</button>
+                            <button className="btn btn-icon btn-danger btn-sm" onClick={() => handleDelete(t)} title="Eliminar">🗑</button>
                           )}
                         </>
                       )}

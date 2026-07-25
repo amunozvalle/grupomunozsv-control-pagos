@@ -47,28 +47,28 @@ export default function SummaryCards({ trabajadores, registros, ramas = [] }) {
     <>
       <div className="summary-grid">
         <div className="summary-card gold">
-          <div className="summary-label">Nomina Total</div>
+          <div className="summary-label">💰 Nómina total</div>
           <div className="summary-value gold">${fmt(totalNomina)}</div>
         </div>
         <div className="summary-card green">
-          <div className="summary-label">Monto Pagado</div>
+          <div className="summary-label">✅ Monto pagado</div>
           <div className="summary-value green">${fmt(totalPagado)}</div>
         </div>
-        <div className="summary-card red">
-          <div className="summary-label">Balance Restante</div>
-          <div className="summary-value red">${fmt(balanceRestante)}</div>
+        <div className={`summary-card ${balanceRestante > 0 ? 'red' : 'green'}`}>
+          <div className="summary-label">⏳ Balance restante</div>
+          <div className={`summary-value ${balanceRestante > 0 ? 'red' : 'green'}`}>${fmt(balanceRestante)}</div>
         </div>
         <div className="summary-card blue">
-          <div className="summary-label">Trabajadores</div>
-          <div className="summary-value blue">{trabajadoresConRegistro.size}</div>
+          <div className="summary-label">👷 Trabajadores</div>
+          <div className="summary-value">{trabajadoresConRegistro.size}</div>
         </div>
         <div className="summary-card green">
-          <div className="summary-label">Dias Trabajados</div>
-          <div className="summary-value green">{totalDias}</div>
+          <div className="summary-label">📅 Días trabajados</div>
+          <div className="summary-value">{totalDias}</div>
         </div>
-        <div className="summary-card red">
-          <div className="summary-label">Anticipos</div>
-          <div className="summary-value red">${fmt(totalAnticipos)}</div>
+        <div className="summary-card">
+          <div className="summary-label">💵 Anticipos</div>
+          <div className={`summary-value ${totalAnticipos > 0 ? 'red' : 'muted'}`}>${fmt(totalAnticipos)}</div>
         </div>
       </div>
 

@@ -1,17 +1,28 @@
 :root {
-  --bg: #111116;
-  --surface: #1a1a22;
-  --surface2: #222230;
-  --border: #2a2a36;
-  --gold: #d4a842;
-  --gold-light: #e8bc5a;
-  --gold-dim: rgba(212,168,66,0.12);
-  --red: #ef5350;
-  --green: #4caf82;
-  --blue: #5c9ce6;
-  --text: #e8e6f0;
-  --text-dim: #6b6880;
-  --text-muted: #3a3848;
+  --bg: #0e0e13;
+  --surface: #16161d;
+  --surface2: #1e1e28;
+  --border: #262631;
+  --border-strong: #34343f;
+  --gold: #e0a93c;
+  --gold-light: #f0bf5c;
+  --gold-dim: rgba(224,169,60,0.12);
+  --gold-soft: rgba(224,169,60,0.07);
+  --red: #e5645f;
+  --red-soft: rgba(229,100,95,0.12);
+  --green: #46b98a;
+  --green-soft: rgba(70,185,138,0.12);
+  --blue: #5b95dd;
+  --text: #ecebf2;
+  --text-dim: #7a7790;
+  --text-muted: #3f3d4d;
+}
+
+/* Numeros alineados y de ancho fijo en toda la app (look contable) */
+.summary-value, .proyeccion-total, .rama-real, .rama-proyectado,
+table td, table th, .num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -103,27 +114,32 @@ header {
 .summary-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.2rem;
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
   position: relative;
   overflow: hidden;
+  transition: border-color 0.18s ease, transform 0.18s ease;
 }
-.summary-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
+.summary-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.summary-label {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.72rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.55rem;
 }
-.summary-card.gold::before { background: var(--gold); }
-.summary-card.green::before { background: var(--green); }
-.summary-card.red::before { background: var(--red); }
-.summary-card.blue::before { background: var(--blue); }
-.summary-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
-.summary-value { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 500; }
+.summary-label::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-dim); flex-shrink: 0;
+}
+.summary-card.gold  .summary-label::before { background: var(--gold); }
+.summary-card.green .summary-label::before { background: var(--green); }
+.summary-card.red   .summary-label::before { background: var(--red); }
+.summary-card.blue  .summary-label::before { background: var(--blue); }
+.summary-value { font-family: 'DM Mono', monospace; font-size: 1.55rem; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
 .summary-value.gold { color: var(--gold); }
 .summary-value.green { color: var(--green); }
 .summary-value.red { color: var(--red); }
-.summary-value.blue { color: var(--blue); }
+.summary-value.blue { color: var(--text); }
+.summary-value.muted { color: var(--text); }
 
 /* PROYECCIÓN SEMANAL */
 .proyeccion-card {
@@ -277,7 +293,25 @@ thead th {
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface2); }
-td { padding: 0.8rem 1rem; vertical-align: middle; }
+td { padding: 0.7rem 1rem; vertical-align: middle; }
+tbody tr:nth-child(even) { background: rgba(255,255,255,0.014); }
+tbody tr:hover { background: var(--surface2); }
+tbody tr.row-empty td { opacity: 0.55; }
+tbody tr.row-empty:hover td { opacity: 0.85; }
+td.num { text-align: right; font-family: 'DM Mono', monospace; }
+
+/* STATUS PILLS — estados consistentes en toda la app */
+.status {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.22rem 0.6rem; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.status.paid    { background: var(--green-soft); color: var(--green); border-color: rgba(70,185,138,0.28); }
+.status.pending { background: var(--gold-soft); color: var(--gold-light); border-color: var(--gold-dim); }
+.status.none    { background: transparent; color: var(--text-muted); border-color: var(--border); }
+.status.paid:hover { border-color: var(--green); }
+.status.pending:hover { border-color: var(--gold); }
 
 /* DAY PICKER */
 .day-picker { display: flex; gap: 0.3rem; }

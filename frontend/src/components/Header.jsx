@@ -42,7 +42,7 @@ export default function Header({ onImportar, currentAdmin, onLogout }) {
         </button>
         {onLogout && (
           <button className="btn btn-outline" onClick={onLogout}>
-            Cerrar sesion
+            Cerrar sesión
           </button>
         )}
       </div>
