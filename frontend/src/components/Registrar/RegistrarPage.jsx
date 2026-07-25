@@ -109,6 +109,8 @@ export default function RegistrarPage() {
   const [dias, setDias] = useState({ L: 0, M: 0, X: 0, J: 0, V: 0, S: 0 });
   const [extras, setExtras] = useState([]);
   const [anticipos, setAnticipos] = useState([]);
+  const [reembolsos, setReembolsos] = useState([]);
+  const [notasDias, setNotasDias] = useState({ L: '', M: '', X: '', J: '', V: '', S: '' });
   const [notas, setNotas] = useState('');
 
   useEffect(() => {
@@ -126,6 +128,9 @@ export default function RegistrarPage() {
         else if (rec?.extra) setExtras([{ monto: rec.extra, descripcion: '' }]);
         if (rec?.anticipos?.length) setAnticipos(rec.anticipos);
         else if (rec?.anticipo) setAnticipos([{ monto: rec.anticipo, descripcion: '' }]);
+        if (rec?.reembolsos?.length) setReembolsos(rec.reembolsos);
+        else if (rec?.reembolso) setReembolsos([{ monto: rec.reembolso, descripcion: '' }]);
+        setNotasDias({ L: '', M: '', X: '', J: '', V: '', S: '', ...(rec?.notasDias || {}) });
         setNotas(rec?.notas || '');
       } catch {
         if (!active) return;
@@ -141,10 +146,8 @@ export default function RegistrarPage() {
   const totalDias = DIAS_KEYS.reduce((sum, key) => sum + (dias[key] || 0), 0);
   const totalExtra = extras.reduce((s, e) => s + e.monto, 0);
   const totalAnticipo = anticipos.reduce((s, a) => s + a.monto, 0);
-  const preview = calcPago(
-    trabajador,
-    { dias, extra: totalExtra, anticipo: totalAnticipo }
-  );
+  const totalReembolso = reembolsos.reduce((s, r) => s + r.monto, 0);
+  const totalGanado = calcPago(trabajador, { dias, extras, anticipos, reembolsos });
 
   async function handleSave() {
     setSaving(true);
@@ -156,8 +159,11 @@ export default function RegistrarPage() {
         dias,
         extras,
         anticipos,
+        reembolsos,
         extra: totalExtra,
         anticipo: totalAnticipo,
+        reembolso: totalReembolso,
+        notasDias,
         notas,
       });
       setSuccess('Tu hoja de trabajo semanal quedo guardada. La nomina ya se actualizo en el sistema.');
@@ -228,6 +234,27 @@ export default function RegistrarPage() {
             </div>
             <div className="registrar-hint">Toca cada dia para cambiar entre ausente, completo y medio dia.</div>
           </div>
+
+          <div className="form-group full" style={{ marginTop: '0.85rem' }}>
+            <label>Notas por día (opcional)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {DIAS_KEYS.map((key) => (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ width: 34, flexShrink: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>{DIAS_LABELS[key]}</span>
+                  <input
+                    value={notasDias[key] || ''}
+                    onChange={(e) => setNotasDias((prev) => ({ ...prev, [key]: e.target.value }))}
+                    placeholder="Nota del día (opcional)..."
+                    style={{
+                      flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8,
+                      border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.3)',
+                      color: '#fff', fontSize: '0.85rem', outline: 'none',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Movimientos */}
@@ -246,6 +273,13 @@ export default function RegistrarPage() {
             onAdd={item => setAnticipos(prev => [...prev, item])}
             onRemove={i => setAnticipos(prev => prev.filter((_, idx) => idx !== i))}
           />
+          <MovimientosSection
+            label="Reembolso"
+            color="#5b95dd"
+            items={reembolsos}
+            onAdd={item => setReembolsos(prev => [...prev, item])}
+            onRemove={i => setReembolsos(prev => prev.filter((_, idx) => idx !== i))}
+          />
         </div>
 
         {/* Notas */}
@@ -261,17 +295,18 @@ export default function RegistrarPage() {
           </div>
         </div>
 
-        {/* Total */}
+        {/* Total ganado (sin mostrar el sueldo por dia) */}
         <div className="registrar-summary">
           <div>
             <div className="registrar-summary-label">
               {totalDias} dias
               {totalExtra > 0 && ` · +$${fmt(totalExtra)} extra`}
+              {totalReembolso > 0 && ` · +$${fmt(totalReembolso)} reembolso`}
               {totalAnticipo > 0 && ` · -$${fmt(totalAnticipo)} anticipo`}
             </div>
-            <div className="registrar-summary-title">Total estimado</div>
+            <div className="registrar-summary-title">Total ganado esta semana</div>
           </div>
-          <div className="registrar-summary-amount">${fmt(preview)}</div>
+          <div className="registrar-summary-amount">${fmt(totalGanado)}</div>
         </div>
 
         <button className="btn btn-primary registrar-submit" onClick={handleSave} disabled={saving}>
