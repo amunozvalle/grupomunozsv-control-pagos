@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import SemanaTable from './SemanaTable';
 import PagoModal from './PagoModal';
-import CompartirModal from './CompartirModal';
 import RecordatorioModal from './RecordatorioModal';
 import { formatSemana } from '../../utils/week';
 
@@ -12,7 +11,6 @@ function fmt(n) {
 export default function SemanaTab({ trabajadores, ramas, registros, cobros = [], semanaKey, semanaOffset, setSemanaOffset, onRefresh, onRefreshCobros, isViewer }) {
   const [filtroRama, setFiltroRama] = useState('todos');
   const [editando, setEditando] = useState(null);
-  const [compartirOpen, setCompartirOpen] = useState(false);
   const [recordatorioOpen, setRecordatorioOpen] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
@@ -75,9 +73,6 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-outline btn-sm" onClick={() => setRecordatorioOpen(true)}>
             Recordatorio Sábado
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => setCompartirOpen(true)}>
-            Compartir timesheets
           </button>
           <div className="week-nav">
             <button className="btn btn-icon btn-outline" onClick={() => setSemanaOffset((o) => o - 1)}>‹</button>
@@ -196,7 +191,6 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
         )}
       </div>
 
-      {compartirOpen && <CompartirModal semanaKey={semanaKey} onClose={() => setCompartirOpen(false)} />}
       {recordatorioOpen && <RecordatorioModal trabajadores={trabajadores} registros={registros} semanaKey={semanaKey} onClose={() => setRecordatorioOpen(false)} />}
       {editando && (
         <PagoModal
