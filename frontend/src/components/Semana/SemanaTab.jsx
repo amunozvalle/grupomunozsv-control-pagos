@@ -131,7 +131,7 @@ export default function SemanaTab({ trabajadores, ramas, registros, cobros = [],
           )}
           <div className="week-nav">
             <button className="btn btn-icon btn-outline" onClick={() => setSemanaOffset((o) => o - 1)}>‹</button>
-            <span className="week-label">{formatSemana(semanaKey)}</span>
+            <span className="week-label">{cerrada ? '🔒 ' : ''}{formatSemana(semanaKey)}</span>
             <button className="btn btn-icon btn-outline" onClick={() => setSemanaOffset((o) => o + 1)}>›</button>
             {semanaOffset !== 0 && (
               <button className="btn btn-sm btn-outline" onClick={() => setSemanaOffset(0)}>Hoy</button>
