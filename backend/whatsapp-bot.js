@@ -21,6 +21,13 @@ let qrDataUrl = null;
 let status = 'disconnected';
 let _stopReconnect = false;
 let _sendLock = false;
+let _initializing = false;
+let _readyTimer = null;
+
+// Evita que una promesa suelta de Baileys tumbe TODO el backend (nomina).
+process.on('unhandledRejection', (err) => {
+  console.log('[whatsapp] unhandledRejection ignorado:', (err && err.message) || err);
+});
 
 function loadGrupos() {
   if (!fs.existsSync(GRUPOS_PATH)) return {};
@@ -35,100 +42,130 @@ function getStatus() {
   return { status, hasQr: !!qrDataUrl, qr: status === 'qr' ? qrDataUrl : null };
 }
 
+// Cierra y limpia el socket actual para no dejar conexiones duplicadas (evita conflict 440)
+function teardownSock() {
+  if (_readyTimer) { clearTimeout(_readyTimer); _readyTimer = null; }
+  if (sock) {
+    try { sock.ev.removeAllListeners(); } catch (_) {}
+    try { sock.end(undefined); } catch (_) {}
+    try { sock.ws && sock.ws.close(); } catch (_) {}
+  }
+  sock = null;
+}
+
 async function initWhatsApp() {
-  if (sock && status === 'ready') return;
+  if (status === 'ready') return;
+  if (_initializing) { console.log('[whatsapp] init ya en progreso - ignorando'); return; }
+  _initializing = true;
   _stopReconnect = false;
 
-  auth = await useDurableAuthState(AUTH_FILE);
-  const { state, saveCreds } = auth;
-  const { version, isLatest } = await fetchLatestBaileysVersion();
-  console.log(`[whatsapp] Baileys v${version.join('.')} isLatest:${isLatest}`);
+  try {
+    teardownSock();
 
-  const logger = pino({ level: 'warn' });
+    auth = await useDurableAuthState(AUTH_FILE);
+    const { state, saveCreds } = auth;
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log(`[whatsapp] Baileys v${version.join('.')} isLatest:${isLatest}`);
 
-  sock = makeWASocket({
-    version,
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, logger),
-    },
-    browser: Browsers.macOS('Safari'),
-    logger,
-    printQRInTerminal: true,
-    connectTimeoutMs: 60000,
-    keepAliveIntervalMs: 10000,
-    retryRequestDelayMs: 2000,
-    getMessage: async () => undefined,
-  });
+    const logger = pino({ level: 'warn' });
 
-  sock.ev.on('creds.update', saveCreds);
+    const currentSock = makeWASocket({
+      version,
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, logger),
+      },
+      browser: Browsers.macOS('Safari'),
+      logger,
+      connectTimeoutMs: 60000,
+      keepAliveIntervalMs: 10000,
+      retryRequestDelayMs: 2000,
+      markOnlineOnConnect: false,
+      syncFullHistory: false,
+      shouldSyncHistoryMessage: () => false,
+      getMessage: async () => undefined,
+    });
+    sock = currentSock;
 
-  sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    currentSock.ev.on('creds.update', saveCreds);
 
-    if (qr) {
-      status = 'qr';
-      qrDataUrl = await qrcode.toDataURL(qr);
-      console.log('[whatsapp] QR generado');
-    }
+    currentSock.ev.on('connection.update', async (update) => {
+      // Ignorar eventos de un socket viejo ya reemplazado
+      if (sock !== currentSock) return;
+      const { connection, lastDisconnect, qr } = update;
 
-    if (connection === 'open') {
-      status = 'connecting';
-      qrDataUrl = null;
-      console.log('[whatsapp] Autenticado - esperando sincronizacion');
-
-      setTimeout(async () => {
-        try { await sock.sendPresenceUpdate('available'); } catch (_) {}
-      }, 2000);
-
-      const onHistorySet = () => {
-        console.log('[whatsapp] Historial recibido - esperando 5s');
-        if (status === 'connecting') {
-          setTimeout(() => {
-            if (status === 'connecting') {
-              status = 'ready';
-              console.log('[whatsapp] Listo para enviar');
-            }
-          }, 5000);
-        }
-      };
-      sock.ev.on('messaging-history.set', onHistorySet);
-
-      setTimeout(() => {
-        if (status === 'connecting') {
-          sock.ev.off('messaging-history.set', onHistorySet);
-          status = 'ready';
-          console.log('[whatsapp] Listo (timeout 60s)');
-        }
-      }, 60000);
-    }
-
-    if (connection === 'close') {
-      const code = lastDisconnect?.error?.output?.statusCode;
-      const reason = lastDisconnect?.error?.message || 'desconocido';
-      console.log(`[whatsapp] Desconectado. Codigo: ${code} | Razon: ${reason}`);
-
-      const loggedOut = code === DisconnectReason.loggedOut;
-      const shouldReconnect = !_stopReconnect && !loggedOut;
-
-      status = 'disconnected';
-      qrDataUrl = null;
-      sock = null;
-
-      if (loggedOut) {
-        console.log('[whatsapp] Sesion cerrada - limpiando');
-        if (auth) auth.clear();
-      } else if (shouldReconnect) {
-        console.log('[whatsapp] Reintentando en 5s');
-        setTimeout(initWhatsApp, 5000);
+      if (qr) {
+        status = 'qr';
+        qrDataUrl = await qrcode.toDataURL(qr);
+        console.log('[whatsapp] QR generado');
       }
-    }
-  });
+
+      if (connection === 'open') {
+        status = 'connecting';
+        qrDataUrl = null;
+        console.log('[whatsapp] Autenticado - esperando sincronizacion');
+
+        setTimeout(() => {
+          if (sock !== currentSock) return;
+          currentSock.sendPresenceUpdate('available').catch(() => {});
+        }, 2000);
+
+        // El bot solo envia a grupos; no necesita sincronizar historial.
+        // Tras unos segundos estable, lo marcamos listo.
+        if (_readyTimer) clearTimeout(_readyTimer);
+        _readyTimer = setTimeout(() => {
+          if (sock === currentSock && status === 'connecting') {
+            status = 'ready';
+            console.log('[whatsapp] Listo para enviar');
+          }
+        }, 8000);
+      }
+
+      if (connection === 'close') {
+        const code = lastDisconnect?.error?.output?.statusCode;
+        const reason = lastDisconnect?.error?.message || 'desconocido';
+        console.log(`[whatsapp] Desconectado. Codigo: ${code} | Razon: ${reason}`);
+
+        if (sock === currentSock) sock = null;
+        status = 'disconnected';
+        qrDataUrl = null;
+        if (_readyTimer) { clearTimeout(_readyTimer); _readyTimer = null; }
+
+        const loggedOut = code === DisconnectReason.loggedOut;
+        const replaced = code === DisconnectReason.connectionReplaced;
+
+        if (loggedOut) {
+          console.log('[whatsapp] Sesion cerrada - limpiando');
+          if (auth) auth.clear();
+        } else if (replaced) {
+          // Otra conexion tomo la sesion. NO reconectar para no pelear (evita bucle 440).
+          console.log('[whatsapp] Conexion reemplazada - no se reconecta automaticamente');
+        } else if (!_stopReconnect) {
+          console.log('[whatsapp] Reintentando en 5s');
+          setTimeout(() => { initWhatsApp().catch(() => {}); }, 5000);
+        }
+      }
+    });
+  } catch (e) {
+    console.log('[whatsapp] error en init:', e.message);
+    teardownSock();
+    status = 'disconnected';
+  } finally {
+    _initializing = false;
+  }
 }
 
 function disconnectWhatsApp() {
   _stopReconnect = true;
-  if (sock) { sock.logout().catch(() => {}); sock = null; }
+  _initializing = false;
+  const s = sock;
+  sock = null;
+  if (_readyTimer) { clearTimeout(_readyTimer); _readyTimer = null; }
+  if (s) {
+    try { s.logout().catch(() => {}); } catch (_) {}
+    try { s.ev.removeAllListeners(); } catch (_) {}
+    try { s.end(undefined); } catch (_) {}
+  }
   status = 'disconnected';
   qrDataUrl = null;
   if (auth) auth.clear();
@@ -136,7 +173,8 @@ function disconnectWhatsApp() {
 
 function resetWhatsApp() {
   _stopReconnect = true;
-  sock = null;
+  _initializing = false;
+  teardownSock();
   status = 'disconnected';
   qrDataUrl = null;
   _sendLock = false;
