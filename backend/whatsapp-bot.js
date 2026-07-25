@@ -266,10 +266,21 @@ async function getChats() {
   } catch { return []; }
 }
 
+// Frases del aviso de bot — rota una al azar cada envio (mensaje "dinamico")
+const AVISOS_BOT = [
+  '🤖 Este es un mensaje automático del sistema de nómina. Por favor no responder a este chat.',
+  '🤖 Mensaje enviado automáticamente por el sistema de nómina de Grupo Muñoz.',
+  '🤖 Recordatorio automático del sistema de nómina. No es necesario responder aquí.',
+  '🤖 Aviso generado automáticamente por el sistema de nómina. Gracias por su atención.',
+  '🤖 Este recordatorio fue enviado de forma automática. Por favor no responder a este mensaje.',
+];
+
 function buildRecordatorioMsg({ semanaLabel }) {
-  let msg = `Recordatorio de Nomina - ${semanaLabel}\n`;
-  msg += `Buenos dias a todos. Por favor recuerden llenar su hoja de trabajo del sabado antes de terminar el dia.\n\n`;
-  msg += `Gracias`;
+  const aviso = AVISOS_BOT[Math.floor(Math.random() * AVISOS_BOT.length)];
+  let msg = `📋 *Recordatorio de Nómina — ${semanaLabel}*\n\n`;
+  msg += `Buenos días a todos. Por favor, recuerden llenar su hoja de trabajo del sábado antes de las diez de la mañana.\n\n`;
+  msg += `¡Gracias! 🙏\n\n`;
+  msg += `_${aviso}_`;
   return msg;
 }
 
@@ -284,5 +295,80 @@ async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel
   }
   return { ok: true, resultados };
 }
+
+// ── Etiqueta de la semana en curso (hora de El Salvador), lunes → hoy ──
+function getSemanaLabelSV() {
+  const svDate = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/El_Salvador' });
+  const svDay = new Date(svDate + 'T12:00:00');
+  const mon = new Date(svDay);
+  mon.setDate(svDay.getDate() - ((svDay.getDay() + 6) % 7));
+  const fmt = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+  return `${fmt(mon)} - ${fmt(svDay)}`;
+}
+
+// ── Hora actual en El Salvador (dia, hora, minuto, fecha) ──
+function svNow() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/El_Salvador', weekday: 'short',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date());
+  const get = (t) => (parts.find((p) => p.type === t) || {}).value;
+  return {
+    weekday: get('weekday'),
+    hour: parseInt(get('hour'), 10),
+    minute: parseInt(get('minute'), 10),
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+  };
+}
+
+// ── Programador: recordatorio automatico cada SABADO a las 8:00 AM (El Salvador) ──
+let _lastFiredDate = null;
+let _schedulerStarted = false;
+function startScheduler() {
+  if (_schedulerStarted) return;
+  _schedulerStarted = true;
+  console.log('[scheduler] Activo — recordatorio automatico sabados 8:00 AM (El Salvador)');
+  setInterval(async () => {
+    try {
+      const { weekday, hour, minute, date } = svNow();
+      // Ventana 8:00–8:04 para no perder el disparo; una sola vez por dia
+      if (weekday === 'Sat' && hour === 8 && minute < 5 && _lastFiredDate !== date) {
+        _lastFiredDate = date;
+        if (status !== 'ready') {
+          console.log('[scheduler] Es hora pero el bot no esta conectado — no se envio');
+          return;
+        }
+        console.log('[scheduler] Enviando recordatorio automatico...');
+        const db = require('./store');
+        const trabajadores = db.getTrabajadores();
+        const ramas = db.getRamas();
+        const semanaLabel = getSemanaLabelSV();
+        const res = await enviarRecordatorios({ trabajadores, registros: {}, ramas, semanaLabel });
+        const ok = (res.resultados || []).filter((r) => r.ok).length;
+        console.log(`[scheduler] Recordatorio enviado a ${ok} grupo(s)`);
+      }
+    } catch (e) {
+      console.log('[scheduler] error:', e.message);
+    }
+  }, 60 * 1000);
+}
+
+// ── Auto-conectar al arrancar si ya hay sesion guardada (WA_SESSION o archivo) ──
+function hasSession() {
+  return !!process.env.WA_SESSION || fs.existsSync(AUTH_FILE);
+}
+function autoStart() {
+  startScheduler();
+  if (hasSession()) {
+    console.log('[whatsapp] Sesion detectada — conectando automaticamente al arrancar');
+    setTimeout(() => { initWhatsApp().catch(() => {}); }, 3000);
+  } else {
+    console.log('[whatsapp] Sin sesion guardada — esperando conexion manual (escanear QR)');
+  }
+}
+
+// Arranca al cargar el modulo (cuando el servidor levanta)
+autoStart();
 
 module.exports = { initWhatsApp, disconnectWhatsApp, resetWhatsApp, exportSession, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };
