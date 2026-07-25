@@ -897,6 +897,49 @@ td.num { text-align: right; font-family: 'DM Mono', monospace; }
     background: #fff !important;
   }
 
+  /* ── REDISEÑO IMPRESIÓN: una sola tipografía, escala pareja ── */
+  .content, .content * {
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    font-variant-numeric: tabular-nums !important;
+    letter-spacing: 0 !important;
+    color: #111 !important;
+  }
+  /* Quita el título "Reporte" redundante (ya está el encabezado grande) */
+  .content .section-title,
+  .section-header { display: none !important; }
+
+  /* Encabezado del documento */
+  .print-header { display: block !important; margin-bottom: 10px !important; }
+  .print-header > div:first-child { font-size: 17px !important; font-weight: 700 !important; }
+  .print-header > div:nth-child(2) { font-size: 12px !important; font-weight: 600 !important; color: #333 !important; }
+  .print-header > div:last-child { font-size: 8px !important; color: #888 !important; }
+
+  /* Montos entregados: todo al mismo tamaño, número principal destacado */
+  .print-sobrante {
+    border: 1px solid #333 !important; border-radius: 6px !important;
+    padding: 10px 12px !important; margin-top: 10px !important; background: #fff !important;
+  }
+  .print-sobrante, .print-sobrante * { font-size: 10px !important; }
+  .print-sobrante strong { font-weight: 700 !important; }
+  .print-sobrante .print-sobrante-amount { font-size: 15px !important; font-weight: 700 !important; }
+
+  /* Estado sobrio, no rojo fuerte */
+  .estado-badge {
+    background: transparent !important; border: 1px solid #bbb !important;
+    color: #444 !important; font-weight: 600 !important; font-size: 8px !important;
+    padding: 1px 6px !important; border-radius: 3px !important;
+  }
+
+  /* Tarjetas por rama uniformes (sin bordes de color) */
+  div[style*="grid"] > div[style*="border-top"] {
+    background: #fafafa !important; border: 1px solid #ccc !important;
+    border-radius: 6px !important; padding: 8px 10px !important;
+    page-break-inside: avoid !important; break-inside: avoid !important;
+  }
+  div[style*="grid"] > div[style*="border-top"] > div:first-child { font-size: 9px !important; font-weight: 600 !important; }
+  div[style*="grid"] > div[style*="border-top"] > div:nth-child(2) { font-size: 13px !important; font-weight: 700 !important; }
+  div[style*="grid"] > div[style*="border-top"] > div:last-child { font-size: 8px !important; color: #777 !important; }
+
   .container {
     max-width: none;
     padding: 0;
@@ -956,26 +999,6 @@ td.num { text-align: right; font-family: 'DM Mono', monospace; }
     position: static !important;
   }
 
-  .section-header {
-    margin-bottom: 0.3rem !important;
-  }
-
-  .section-title {
-    font-size: 14px !important;
-    color: #000 !important;
-  }
-
-  .print-header {
-    display: block !important;
-  }
-
-  .estado-badge {
-    background: transparent !important;
-    border: 1px solid #999 !important;
-    padding: 1px 6px !important;
-    border-radius: 3px !important;
-  }
-
   .print-only {
     display: inline !important;
   }
@@ -986,47 +1009,6 @@ td.num { text-align: right; font-family: 'DM Mono', monospace; }
     border: 1px solid #999 !important;
     background: #f0f0f0 !important;
     color: #333 !important;
-  }
-
-  .print-sobrante {
-    background: #f9f9f9 !important;
-    border: 2px solid #333 !important;
-    padding: 8px !important;
-    margin-top: 8px !important;
-    page-break-inside: avoid;
-    color: #000 !important;
-  }
-
-  .print-sobrante * {
-    color: #000 !important;
-  }
-
-  .print-sobrante strong {
-    color: #b8860b !important;
-  }
-
-  /* Force monospace values to dark */
-  td[style*="monospace"] {
-    color: #000 !important;
-  }
-
-  /* Rama summary cards for print */
-  div[style*="grid"] > div[style*="border-top"] {
-    background: #f9f9f9 !important;
-    border: 1px solid #ccc !important;
-    border-top: 3px solid #999 !important;
-    color: #000 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  div[style*="grid"] > div[style*="border-top"] * {
-    color: #333 !important;
-  }
-
-  div[style*="grid"] > div[style*="border-top"] div[style*="monospace"] {
-    color: #000 !important;
-    font-weight: 700 !important;
   }
 }
 

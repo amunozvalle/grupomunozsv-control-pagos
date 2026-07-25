@@ -477,7 +477,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {sobrante >= 0 ? 'Sobrante' : 'Faltante'}
                   </div>
-                  <div style={{
+                  <div className="print-sobrante-amount" style={{
                     fontFamily: 'DM Mono, monospace', fontSize: '1.3rem', fontWeight: 700,
                     color: sobrante >= 0 ? 'var(--green)' : 'var(--red)',
                   }}>
