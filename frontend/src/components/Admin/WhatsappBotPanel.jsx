@@ -116,6 +116,19 @@ export default function WhatsappBotPanel({ ramas }) {
     }
   }
 
+  async function probarRecordatorios() {
+    if (!confirm('Esto enviará AHORA los dos recordatorios (8 AM y 10 AM) a todos los grupos configurados. ¿Continuar?')) return;
+    try {
+      const res = await fetch('/api/whatsapp/bot/recordatorio-test', { method: 'POST' });
+      const data = await res.json();
+      if (!data.ok) { alert('Error: ' + (data.error || 'no se pudo enviar')); return; }
+      const cuenta = (r) => (r?.resultados || []).filter(x => x.ok).length;
+      alert(`✓ Prueba enviada.\n• Recordatorio 8 AM: ${cuenta(data.ochoAM)} grupo(s)\n• Recordatorio 10 AM: ${cuenta(data.diezAM)} grupo(s)`);
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
   async function copiarSesion() {
     try {
       const res = await fetch('/api/whatsapp/bot/session');
@@ -172,6 +185,7 @@ export default function WhatsappBotPanel({ ramas }) {
           {status?.status === 'ready' && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={enviarRecordatorio}>📨 Enviar recordatorio ahora</button>
+              <button className="btn btn-outline" onClick={probarRecordatorios} title="Prueba: envía los dos recordatorios (8 AM y 10 AM) ahora mismo">🧪 Probar 8AM + 10AM</button>
               <button className="btn btn-outline" onClick={recargarGrupos}>↻ Recargar grupos</button>
               <button className="btn btn-outline" style={{ color: 'var(--green)', borderColor: 'var(--green)' }} onClick={copiarSesion} title="Copia la sesión para pegarla en la variable WA_SESSION del hosting y no volver a escanear el QR">🔒 Guardar sesión</button>
               <button className="btn btn-outline" style={{ color: 'var(--red)', borderColor: 'var(--red)' }} onClick={desconectar}>✕ Cerrar sesión</button>

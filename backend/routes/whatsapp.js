@@ -352,3 +352,13 @@ router.get('/bot/session', (req, res) => {
   if (!session) return res.status(400).json({ ok: false, error: 'No hay sesion activa. Conecta y escanea el QR primero.' });
   res.json({ ok: true, session });
 });
+
+// TEMPORAL — probar los dos recordatorios (8AM + 10AM) ahora mismo
+router.post('/bot/recordatorio-test', async (req, res) => {
+  try {
+    const result = await bot.probarRecordatorios();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});

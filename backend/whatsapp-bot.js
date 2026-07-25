@@ -376,6 +376,17 @@ function startScheduler() {
   }, 60 * 1000);
 }
 
+// Envia los dos recordatorios ahora mismo (para probar sin esperar al sabado)
+async function probarRecordatorios() {
+  const db = require('./store');
+  const trabajadores = db.getTrabajadores();
+  const ramas = db.getRamas();
+  const semanaLabel = getSemanaLabelSV();
+  const r1 = await enviarRecordatorios({ trabajadores, registros: {}, ramas, semanaLabel, builder: buildRecordatorioMsg });
+  const r2 = await enviarRecordatorios({ trabajadores, registros: {}, ramas, semanaLabel, builder: buildSegundoRecordatorioMsg });
+  return { ok: true, ochoAM: r1, diezAM: r2 };
+}
+
 // ── Auto-conectar al arrancar si ya hay sesion guardada (WA_SESSION o archivo) ──
 function hasSession() {
   return !!process.env.WA_SESSION || fs.existsSync(AUTH_FILE);
@@ -393,4 +404,4 @@ function autoStart() {
 // Arranca al cargar el modulo (cuando el servidor levanta)
 autoStart();
 
-module.exports = { initWhatsApp, disconnectWhatsApp, resetWhatsApp, exportSession, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };
+module.exports = { initWhatsApp, disconnectWhatsApp, resetWhatsApp, exportSession, getStatus, getChats, sendMessage, enviarRecordatorios, probarRecordatorios, loadGrupos, saveGrupos };
