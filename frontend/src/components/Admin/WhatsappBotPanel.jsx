@@ -105,6 +105,23 @@ export default function WhatsappBotPanel({ ramas }) {
     }
   }
 
+  async function copiarSesion() {
+    try {
+      const res = await fetch('/api/whatsapp/bot/session');
+      const data = await res.json();
+      if (!data.ok) { alert(data.error || 'No se pudo obtener la sesión.'); return; }
+      try {
+        await navigator.clipboard.writeText(data.session);
+        alert('✓ Sesión copiada al portapapeles.\n\nAhora ve al panel del hosting → Variables de entorno, crea (o actualiza) WA_SESSION y pega este valor. Vuelve a desplegar y el bot se conectará solo, sin escanear el QR.');
+      } catch {
+        // Si el navegador bloquea el portapapeles, mostrar en un prompt para copiar manual
+        window.prompt('Copia este valor y pégalo en la variable de entorno WA_SESSION del hosting:', data.session);
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
   async function enviarAGrupo(groupId, ramaLabel) {
     if (!groupId) { alert('Este grupo no tiene WhatsApp asignado.'); return; }
     const { semanaLabel } = getSemanaInfo();
@@ -145,6 +162,7 @@ export default function WhatsappBotPanel({ ramas }) {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={enviarRecordatorio}>📨 Enviar recordatorio ahora</button>
               <button className="btn btn-outline" onClick={recargarGrupos}>↻ Recargar grupos</button>
+              <button className="btn btn-outline" style={{ color: 'var(--green)', borderColor: 'var(--green)' }} onClick={copiarSesion} title="Copia la sesión para pegarla en la variable WA_SESSION del hosting y no volver a escanear el QR">🔒 Guardar sesión</button>
               <button className="btn btn-outline" style={{ color: 'var(--red)', borderColor: 'var(--red)' }} onClick={desconectar}>✕ Cerrar sesión</button>
             </div>
           )}

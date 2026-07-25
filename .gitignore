@@ -9,3 +9,5 @@ frontend/.env.local
 npm-debug.log*
 backend/pagos.json.bak
 backend/pagos.json.tmp
+backend/.baileys_auth/
+backend/whatsapp-auth.json

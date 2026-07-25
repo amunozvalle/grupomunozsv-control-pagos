@@ -1,6 +1,5 @@
 const {
   default: makeWASocket,
-  useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
   Browsers,
@@ -10,12 +9,14 @@ const qrcode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const pino = require('pino');
+const { useDurableAuthState } = require('./wa-auth');
 
 const DATA_DIR = process.env.DATA_DIR || __dirname;
 const GRUPOS_PATH = path.join(DATA_DIR, 'whatsapp-grupos.json');
-const AUTH_DIR = path.join(DATA_DIR, '.baileys_auth');
+const AUTH_FILE = path.join(DATA_DIR, 'whatsapp-auth.json');
 
 let sock = null;
+let auth = null;
 let qrDataUrl = null;
 let status = 'disconnected';
 let _stopReconnect = false;
@@ -37,9 +38,9 @@ function getStatus() {
 async function initWhatsApp() {
   if (sock && status === 'ready') return;
   _stopReconnect = false;
-  if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
 
-  const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+  auth = await useDurableAuthState(AUTH_FILE);
+  const { state, saveCreds } = auth;
   const { version, isLatest } = await fetchLatestBaileysVersion();
   console.log(`[whatsapp] Baileys v${version.join('.')} isLatest:${isLatest}`);
 
@@ -116,7 +117,7 @@ async function initWhatsApp() {
 
       if (loggedOut) {
         console.log('[whatsapp] Sesion cerrada - limpiando');
-        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+        if (auth) auth.clear();
       } else if (shouldReconnect) {
         console.log('[whatsapp] Reintentando en 5s');
         setTimeout(initWhatsApp, 5000);
@@ -130,7 +131,7 @@ function disconnectWhatsApp() {
   if (sock) { sock.logout().catch(() => {}); sock = null; }
   status = 'disconnected';
   qrDataUrl = null;
-  fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+  if (auth) auth.clear();
 }
 
 function resetWhatsApp() {
@@ -139,7 +140,13 @@ function resetWhatsApp() {
   status = 'disconnected';
   qrDataUrl = null;
   _sendLock = false;
-  try { fs.rmSync(AUTH_DIR, { recursive: true, force: true }); } catch {}
+  try { if (auth) auth.clear(); } catch {}
+}
+
+// Exporta la sesion actual como base64 para guardarla en la env var WA_SESSION
+function exportSession() {
+  if (!auth) return null;
+  try { return auth.exportBase64(); } catch { return null; }
 }
 
 async function waitForReady(timeoutMs = 90000) {
@@ -240,4 +247,4 @@ async function enviarRecordatorios({ trabajadores, registros, ramas, semanaLabel
   return { ok: true, resultados };
 }
 
-module.exports = { initWhatsApp, disconnectWhatsApp, resetWhatsApp, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };
+module.exports = { initWhatsApp, disconnectWhatsApp, resetWhatsApp, exportSession, getStatus, getChats, sendMessage, enviarRecordatorios, loadGrupos, saveGrupos };

@@ -344,3 +344,11 @@ router.post('/bot/reset', (req, res) => {
   bot.resetWhatsApp();
   res.json({ ok: true });
 });
+
+// Exportar sesion (base64) para pegar en la env var WA_SESSION del hosting.
+// Asi la sesion sobrevive a los deploys y no hay que re-escanear el QR.
+router.get('/bot/session', (req, res) => {
+  const session = bot.exportSession();
+  if (!session) return res.status(400).json({ ok: false, error: 'No hay sesion activa. Conecta y escanea el QR primero.' });
+  res.json({ ok: true, session });
+});
