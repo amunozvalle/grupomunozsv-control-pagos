@@ -160,7 +160,7 @@ export default function App() {
         <div className="content">
           {activeTab === 'semana' && (
           <>
-            <SummaryCards trabajadores={trabajadores.filter(t => t.activo !== false)} registros={registros} ramas={ramas} />
+            <SummaryCards trabajadores={trabajadores.filter(t => t.activo !== false)} registros={registros} ramas={ramas} semanaKey={semanaKey} />
             <SemanaTab
               trabajadores={trabajadores.filter(t => t.activo !== false)}
               ramas={ramas}

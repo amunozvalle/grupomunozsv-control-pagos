@@ -1,7 +1,21 @@
 import React from 'react';
 import { fmt, calcPago, DIAS_KEYS } from '../utils/week';
 
-export default function SummaryCards({ trabajadores, registros, ramas = [] }) {
+// Total entregado de la semana (los montos que se ingresan en el Reporte, guardados por semana)
+function getTotalEntregado(semanaKey) {
+  try {
+    const raw = localStorage.getItem('gm_montos_entregados');
+    if (!raw) return 0;
+    const all = JSON.parse(raw);
+    const arr = all[`semana_${semanaKey}`];
+    if (!Array.isArray(arr)) return 0;
+    return arr.reduce((s, m) => s + (Number(m.monto) || 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+export default function SummaryCards({ trabajadores, registros, ramas = [], semanaKey }) {
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
 
   let totalNomina = 0;
@@ -23,6 +37,11 @@ export default function SummaryCards({ trabajadores, registros, ramas = [] }) {
   }
 
   const balanceRestante = totalNomina - totalPagado;
+
+  // Total entregado y sobrante/faltante de la semana
+  const totalEntregado = getTotalEntregado(semanaKey);
+  const hayEntrega = totalEntregado > 0;
+  const sobrante = totalEntregado - totalNomina; // negativo = faltante
 
   // Proyección: si todos trabajaran semana completa (6 días = sueldo completo)
   const totalProyectado = trabajadores.reduce((s, t) => s + (t.sueldo || 0), 0);
@@ -69,6 +88,16 @@ export default function SummaryCards({ trabajadores, registros, ramas = [] }) {
         <div className="summary-card">
           <div className="summary-label">💵 Anticipos</div>
           <div className={`summary-value ${totalAnticipos > 0 ? 'red' : 'muted'}`}>${fmt(totalAnticipos)}</div>
+        </div>
+        <div className="summary-card blue">
+          <div className="summary-label">🤝 Total entregado</div>
+          <div className={`summary-value ${hayEntrega ? '' : 'muted'}`}>${fmt(totalEntregado)}</div>
+        </div>
+        <div className={`summary-card ${!hayEntrega ? '' : (sobrante >= 0 ? 'green' : 'red')}`}>
+          <div className="summary-label">{hayEntrega && sobrante < 0 ? '⚠️ Faltante' : '🟢 Sobrante'}</div>
+          <div className={`summary-value ${!hayEntrega ? 'muted' : (sobrante >= 0 ? 'green' : 'red')}`}>
+            ${fmt(hayEntrega ? Math.abs(sobrante) : 0)}
+          </div>
         </div>
       </div>
 
