@@ -7,6 +7,7 @@ import TrabajadoresTab from './components/Trabajadores/TrabajadoresTab';
 import ReporteTab from './components/Reporte/ReporteTab';
 import ReporteAnualTab from './components/Reporte/ReporteAnualTab';
 import AdminsTab from './components/Admin/AdminsTab';
+import WhatsappBotPanel from './components/Admin/WhatsappBotPanel';
 import CobrosTab from './components/Cobros/CobrosTab';
 import LoginPage from './components/Auth/LoginPage';
 import ImportarModal from './components/Importar/ImportarModal';
@@ -36,6 +37,7 @@ const TITLES = {
   cobros: 'Cobros',
   reporte: 'Reporte',
   anual: 'Reporte Anual',
+  whatsapp: 'WhatsApp Bot',
   admins: 'Administración',
 };
 
@@ -204,6 +206,8 @@ export default function App() {
             ramas={ramas}
           />
         )}
+
+        {activeTab === 'whatsapp' && <WhatsappBotPanel ramas={ramas} />}
 
         {activeTab === 'admins' && <AdminsTab ramas={ramas} isViewer={isViewer} />}
         </div>

@@ -19,6 +19,7 @@ const NAV = [
   {
     group: 'Sistema',
     items: [
+      { id: 'whatsapp', label: 'WhatsApp Bot', icon: '🤖' },
       { id: 'admins', label: 'Admins', icon: '⚙️' },
     ],
   },
