@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 import SummaryCards from './components/SummaryCards';
 import SemanaTab from './components/Semana/SemanaTab';
 import TrabajadoresTab from './components/Trabajadores/TrabajadoresTab';
@@ -29,8 +30,18 @@ const TABS = [
   { id: 'admins', label: 'Admins' },
 ];
 
+const TITLES = {
+  semana: 'Semana',
+  trabajadores: 'Trabajadores',
+  cobros: 'Cobros',
+  reporte: 'Reporte',
+  anual: 'Reporte Anual',
+  admins: 'Administración',
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('semana');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [semanaOffset, setSemanaOffset] = useState(0);
   const [trabajadores, setTrabajadores] = useState([]);
   const [ramas, setRamas] = useState([]);
@@ -129,27 +140,25 @@ export default function App() {
   }
 
   return (
-    <>
-      <Header
-        onImportar={() => setImportarOpen(true)}
+    <div className="layout">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         currentAdmin={currentAdmin}
         onLogout={handleLogout}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="container">
-        <nav className="tabs">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`tab-btn${activeTab === t.id ? ' active' : ''}`}
-              onClick={() => setActiveTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
+      <div className="main-area">
+        <Topbar
+          title={TITLES[activeTab] || 'Control de Pagos'}
+          onImportar={() => setImportarOpen(true)}
+          onMenu={() => setSidebarOpen(true)}
+        />
 
-        {activeTab === 'semana' && (
+        <div className="content">
+          {activeTab === 'semana' && (
           <>
             <SummaryCards trabajadores={trabajadores.filter(t => t.activo !== false)} registros={registros} ramas={ramas} />
             <SemanaTab
@@ -197,6 +206,7 @@ export default function App() {
         )}
 
         {activeTab === 'admins' && <AdminsTab ramas={ramas} isViewer={isViewer} />}
+        </div>
       </div>
 
       <ImportarModal
@@ -206,6 +216,6 @@ export default function App() {
         semanaKey={semanaKey}
         onApplied={refreshRegistros}
       />
-    </>
+    </div>
   );
 }
