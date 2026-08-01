@@ -100,7 +100,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const filasDia = registros
     .filter(r => {
       const t = trabajadoresMap[r.trabajador_id];
-      if (!t) return false;
+      if (!t || t.activo === false) return false;
       if (filtroRama !== 'todas' && t.rama !== filtroRama) return false;
       if (diaIndex < 0) return false;
       const key = DIAS_KEYS[diaIndex];
@@ -118,7 +118,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const filasSemana = registros
     .filter(r => {
       const t = trabajadoresMap[r.trabajador_id];
-      return t && (filtroRama === 'todas' || t.rama === filtroRama);
+      return t && t.activo !== false && (filtroRama === 'todas' || t.rama === filtroRama);
     })
     .map(r => {
       const t = trabajadoresMap[r.trabajador_id];
@@ -135,7 +135,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const acuMes = {};
   for (const r of registrosMes) {
     const t = trabajadoresMap[r.trabajador_id];
-    if (!t) continue;
+    if (!t || t.activo === false) continue;
     if (filtroRama !== 'todas' && t.rama !== filtroRama) continue;
     if (!acuMes[r.trabajador_id]) acuMes[r.trabajador_id] = { t, dias: 0, pago: 0, extra: 0, reembolso: 0, anticipo: 0, semanas: 0 };
     const dias = DIAS_KEYS.reduce((s, d) => s + (r.dias?.[d] || 0), 0);
