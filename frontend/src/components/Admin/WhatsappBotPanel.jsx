@@ -178,9 +178,12 @@ export default function WhatsappBotPanel({ ramas }) {
             </div>
           </div>
           {status?.status === 'disconnected' && (
-            <button className="btn btn-primary" onClick={iniciar} disabled={iniciando}>
-              {iniciando ? 'Iniciando...' : '▶ Conectar WhatsApp'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button className="btn btn-primary" onClick={iniciar} disabled={iniciando}>
+                {iniciando ? 'Iniciando...' : '▶ Conectar WhatsApp'}
+              </button>
+              <button className="btn btn-outline btn-sm" onClick={reiniciar} title="Ignora la sesión guardada y genera un código QR nuevo para escanear">↻ Forzar QR nuevo</button>
+            </div>
           )}
           {status?.status === 'ready' && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

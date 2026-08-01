@@ -11,7 +11,7 @@
 const fs = require('fs');
 const { initAuthCreds, BufferJSON, proto } = require('@whiskeysockets/baileys');
 
-async function useDurableAuthState(filePath, envVarName = 'WA_SESSION') {
+async function useDurableAuthState(filePath, { envVarName = 'WA_SESSION', ignoreEnv = false } = {}) {
   let data = { creds: initAuthCreds(), keys: {} };
 
   const tryParse = (raw) => JSON.parse(raw, BufferJSON.reviver);
@@ -23,7 +23,7 @@ async function useDurableAuthState(filePath, envVarName = 'WA_SESSION') {
     } catch (e) {
       console.log('[whatsapp] archivo de sesion corrupto, ignorando:', e.message);
     }
-  } else if (process.env[envVarName]) {
+  } else if (!ignoreEnv && process.env[envVarName]) {
     // 2. Restaurar desde variable de entorno (sobrevive a deploys)
     try {
       const decoded = Buffer.from(process.env[envVarName], 'base64').toString('utf8');
@@ -33,6 +33,8 @@ async function useDurableAuthState(filePath, envVarName = 'WA_SESSION') {
     } catch (e) {
       console.log('[whatsapp] ' + envVarName + ' invalida:', e.message);
     }
+  } else if (ignoreEnv) {
+    console.log('[whatsapp] Forzando sesion nueva (ignorando ' + envVarName + ')');
   }
 
   const write = () => {

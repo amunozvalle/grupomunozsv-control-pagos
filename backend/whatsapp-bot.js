@@ -20,6 +20,7 @@ let auth = null;
 let qrDataUrl = null;
 let status = 'disconnected';
 let _stopReconnect = false;
+let _forceFreshQR = false;
 let _sendLock = false;
 let _initializing = false;
 let _readyTimer = null;
@@ -62,7 +63,7 @@ async function initWhatsApp() {
   try {
     teardownSock();
 
-    auth = await useDurableAuthState(AUTH_FILE);
+    auth = await useDurableAuthState(AUTH_FILE, { ignoreEnv: _forceFreshQR });
     const { state, saveCreds } = auth;
     const { version, isLatest } = await fetchLatestBaileysVersion();
     console.log(`[whatsapp] Baileys v${version.join('.')} isLatest:${isLatest}`);
@@ -103,6 +104,7 @@ async function initWhatsApp() {
       if (connection === 'open') {
         status = 'connecting';
         qrDataUrl = null;
+        _forceFreshQR = false;
         console.log('[whatsapp] Autenticado - esperando sincronizacion');
 
         setTimeout(() => {
@@ -174,6 +176,7 @@ function disconnectWhatsApp() {
 function resetWhatsApp() {
   _stopReconnect = true;
   _initializing = false;
+  _forceFreshQR = true;
   teardownSock();
   status = 'disconnected';
   qrDataUrl = null;
