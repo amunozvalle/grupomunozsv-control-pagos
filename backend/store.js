@@ -119,10 +119,29 @@ const db = {
       monto: m.monto === '' || m.monto === null || m.monto === undefined ? '' : Number(m.monto) || 0,
     }));
     const tieneAlgo = limpio.some(m => String(m.label).trim() !== '' || Number(m.monto) > 0);
+
+    // Historial: guardar la versión anterior antes de sobrescribir (para revertir)
+    const anterior = _db.montosEntregados[periodKey];
+    if (Array.isArray(anterior) && anterior.some(m => Number(m?.monto) > 0)) {
+      if (!_db.montosHistorial) _db.montosHistorial = [];
+      _db.montosHistorial.push({
+        periodKey,
+        montos: anterior,
+        reemplazadoEn: new Date().toISOString(),
+      });
+      // conservar las últimas 300 versiones
+      if (_db.montosHistorial.length > 300) {
+        _db.montosHistorial = _db.montosHistorial.slice(-300);
+      }
+    }
+
     if (tieneAlgo) _db.montosEntregados[periodKey] = limpio;
     else delete _db.montosEntregados[periodKey];
     save(_db);
     return _db.montosEntregados[periodKey] || [];
+  },
+  getMontosHistorial() {
+    return Array.isArray(_db.montosHistorial) ? [..._db.montosHistorial].reverse() : [];
   },
   // Migración: sube lo que estaba en localStorage sin pisar lo que ya está en el servidor
   mergeMontosEntregados(map) {

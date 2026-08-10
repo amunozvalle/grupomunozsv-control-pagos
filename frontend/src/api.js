@@ -48,7 +48,9 @@ export const applyWhatsapp = (semana, rows) => req('POST', '/whatsapp/apply', { 
 export const getCobros = () => req('GET', '/cobros');
 
 export const getMontosEntregados = () => req('GET', '/montos');
-export const saveMontosPeriodo = (periodKey, montos) => req('PUT', `/montos/${periodKey}`, { montos });
+export const saveMontosPeriodo = (periodKey, montos, permitirVacio = false) =>
+  req('PUT', `/montos/${periodKey}`, { montos, permitirVacio });
+export const getMontosHistorial = () => req('GET', '/montos/historial');
 export const migrarMontosEntregados = (map) => req('POST', '/montos/migrar', { map });
 
 export const getRegistrarLinks = (semana) => req('GET', `/registrar/links/${semana}`);

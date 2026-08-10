@@ -76,8 +76,12 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
     if (onMontosChange) onMontosChange(periodKey, next);
     setGuardando(true);
     clearTimeout(saveTimer.current);
+    // ¿el usuario está vaciando a propósito? (borró todo teniendo datos antes)
+    const teniaAlgo = (montosEntregados?.[periodKey] || []).some(m => Number(m?.monto) > 0);
+    const ahoraVacio = !next.some(m => Number(m?.monto) > 0 || String(m?.label || '').trim() !== '');
+    const permitirVacio = teniaAlgo && ahoraVacio; // vaciado intencional
     saveTimer.current = setTimeout(() => {
-      saveMontosPeriodo(periodKey, next)
+      saveMontosPeriodo(periodKey, next, permitirVacio)
         .catch(() => {})
         .finally(() => { dirtyRef.current = false; setGuardando(false); });
     }, 600);
