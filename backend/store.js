@@ -105,6 +105,47 @@ const db = {
     save(_db);
   },
 
+  // ── Montos entregados (por período: semana_/dia_/mes_) ───────────────────
+  getMontosEntregados() { return { ...(_db.montosEntregados || {}) }; },
+  getMontosPeriodo(periodKey) {
+    const all = _db.montosEntregados || {};
+    return Array.isArray(all[periodKey]) ? all[periodKey] : [];
+  },
+  setMontosPeriodo(periodKey, montos) {
+    if (!_db.montosEntregados) _db.montosEntregados = {};
+    const limpio = (Array.isArray(montos) ? montos : []).map(m => ({
+      id: m.id || (Date.now() + '-' + Math.random().toString(36).slice(2, 6)),
+      label: String(m.label || ''),
+      monto: m.monto === '' || m.monto === null || m.monto === undefined ? '' : Number(m.monto) || 0,
+    }));
+    const tieneAlgo = limpio.some(m => String(m.label).trim() !== '' || Number(m.monto) > 0);
+    if (tieneAlgo) _db.montosEntregados[periodKey] = limpio;
+    else delete _db.montosEntregados[periodKey];
+    save(_db);
+    return _db.montosEntregados[periodKey] || [];
+  },
+  // Migración: sube lo que estaba en localStorage sin pisar lo que ya está en el servidor
+  mergeMontosEntregados(map) {
+    if (!_db.montosEntregados) _db.montosEntregados = {};
+    let importados = 0;
+    for (const [k, v] of Object.entries(map || {})) {
+      if (!Array.isArray(v)) continue;
+      const tieneAlgo = v.some(m => Number(m?.monto) > 0);
+      if (!tieneAlgo) continue;
+      const yaExiste = Array.isArray(_db.montosEntregados[k]) &&
+        _db.montosEntregados[k].some(m => Number(m?.monto) > 0);
+      if (yaExiste) continue;
+      _db.montosEntregados[k] = v.map(m => ({
+        id: m.id || (Date.now() + '-' + Math.random().toString(36).slice(2, 6)),
+        label: String(m.label || ''),
+        monto: Number(m.monto) || 0,
+      }));
+      importados++;
+    }
+    if (importados) save(_db);
+    return importados;
+  },
+
   // ── Semanas cerradas (finalizadas) ───────────────────────────────────────
   isSemanaCerrada(semana) {
     return Array.isArray(_db.semanasCerradas) && _db.semanasCerradas.includes(semana);

@@ -34,6 +34,7 @@ app.use('/api/ramas', requireAdmin, require('./routes/ramas'));
 app.use('/api/registros', requireViewer, require('./routes/registros'));
 app.use('/api/whatsapp', requireAdmin, require('./routes/whatsapp'));
 app.use('/api/cobros', requireViewer, require('./routes/cobros'));
+app.use('/api/montos', requireViewer, require('./routes/montos'));
 app.use('/api/admin-users', requireAdmin, require('./routes/adminUsers'));
 app.get('/api/audit', requireAdmin, require('./routes/audit'));
 

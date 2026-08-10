@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DIAS_KEYS, DIAS_LABELS, fmt, calcPago, formatSemana } from '../../utils/week';
-import { getRegistrosMes } from '../../api';
+import { getRegistrosMes, saveMontosPeriodo } from '../../api';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -19,29 +19,15 @@ function getPeriodKey(filtro, semanaKey, diaSeleccionado, mesYear, mesMonth) {
   return `mes_${mesYear}_${mesMonth}`;
 }
 
-const STORAGE_KEY = 'gm_montos_entregados';
+const filaVacia = () => [{ id: Date.now(), label: '', monto: '' }];
 
-function loadMontos(periodKey) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [{ id: Date.now(), label: '', monto: '' }];
-    const all = JSON.parse(raw);
-    const saved = all[periodKey];
-    if (Array.isArray(saved) && saved.length > 0) return saved;
-  } catch {}
-  return [{ id: Date.now(), label: '', monto: '' }];
+function fromServer(map, periodKey) {
+  const saved = map?.[periodKey];
+  if (Array.isArray(saved) && saved.length > 0) return saved;
+  return filaVacia();
 }
 
-function saveMontos(periodKey, montos) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const all = raw ? JSON.parse(raw) : {};
-    all[periodKey] = montos;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch {}
-}
-
-export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, semanaOffset, setSemanaOffset }) {
+export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, semanaOffset, setSemanaOffset, montosEntregados = {}, onMontosChange }) {
   const hoy = new Date();
   const [filtro, setFiltro] = useState('semana');
   const [diaSeleccionado, setDiaSeleccionado] = useState(() => hoy.toLocaleDateString('sv-SE'));
@@ -50,22 +36,42 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const [registrosMes, setRegistrosMes] = useState([]);
   const [loadingMes, setLoadingMes] = useState(false);
   const [filtroRama, setFiltroRama] = useState('todas');
-  const [montosEntregados, setMontosEntregados] = useState([{ id: Date.now(), label: '', monto: '' }]);
+  const [montos, setMontos] = useState(filaVacia());
+  const [guardando, setGuardando] = useState(false);
+  const saveTimer = useRef(null);
+  const dirtyRef = useRef(false);
 
   const ramaMap = Object.fromEntries(ramas.map((r) => [r.id, r]));
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
 
   const periodKey = getPeriodKey(filtro, semanaKey, diaSeleccionado, mesYear, mesMonth);
 
-  // Cargar montos guardados cuando cambia el período
+  // Cargar montos guardados del servidor cuando cambia el período
+  // (no pisamos lo que el usuario está escribiendo: dirtyRef)
   useEffect(() => {
-    setMontosEntregados(loadMontos(periodKey));
+    dirtyRef.current = false;
+    setMontos(fromServer(montosEntregados, periodKey));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodKey]);
 
-  // Guardar montos cuando cambian
   useEffect(() => {
-    saveMontos(periodKey, montosEntregados);
-  }, [periodKey, montosEntregados]);
+    if (dirtyRef.current) return;
+    setMontos(fromServer(montosEntregados, periodKey));
+  }, [montosEntregados, periodKey]);
+
+  // Guardar en el servidor (con debounce) cuando el usuario edita
+  const persistir = useCallback((next) => {
+    dirtyRef.current = true;
+    setMontos(next);
+    if (onMontosChange) onMontosChange(periodKey, next);
+    setGuardando(true);
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveMontosPeriodo(periodKey, next)
+        .catch(() => {})
+        .finally(() => { dirtyRef.current = false; setGuardando(false); });
+    }, 600);
+  }, [periodKey, onMontosChange]);
 
   // Cargar datos del mes
   useEffect(() => {
@@ -77,21 +83,19 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   }, [filtro, mesYear, mesMonth]);
 
   function agregarMonto() {
-    setMontosEntregados(prev => [...prev, { id: Date.now(), label: '', monto: '' }]);
+    persistir([...montos, { id: Date.now(), label: '', monto: '' }]);
   }
 
   function eliminarMonto(id) {
-    setMontosEntregados(prev => {
-      const next = prev.filter(m => m.id !== id);
-      return next.length === 0 ? [{ id: Date.now(), label: '', monto: '' }] : next;
-    });
+    const next = montos.filter(m => m.id !== id);
+    persistir(next.length === 0 ? filaVacia() : next);
   }
 
   function actualizarMonto(id, field, value) {
-    setMontosEntregados(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
+    persistir(montos.map(m => m.id === id ? { ...m, [field]: value } : m));
   }
 
-  const totalEntregado = montosEntregados.reduce((s, m) => s + (Number(m.monto) || 0), 0);
+  const totalEntregado = montos.reduce((s, m) => s + (Number(m.monto) || 0), 0);
 
   // ── Datos para filtro DÍA ──────────────────────────────────────────────
   const diasDeSemana = getSemanaFechas(semanaKey);
@@ -390,6 +394,9 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Montos entregados
+                <span className="no-print" style={{ marginLeft: '0.6rem', fontWeight: 500, textTransform: 'none', letterSpacing: 0, opacity: 0.75 }}>
+                  {guardando ? 'guardando…' : 'guardado ✓'}
+                </span>
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
@@ -407,7 +414,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
 
             {/* Lista de casillas */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {montosEntregados.map((m, idx) => (
+              {montos.map((m, idx) => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)', minWidth: 20, textAlign: 'right' }}>
                     {idx + 1}.
@@ -439,7 +446,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                   <span className="print-only" style={{ display: 'none', fontSize: '0.88rem' }}>
                     {m.label ? `${m.label}: ` : ''}<strong>${fmt(Number(m.monto) || 0)}</strong>
                   </span>
-                  {montosEntregados.length > 1 && (
+                  {montos.length > 1 && (
                     <button
                       className="btn btn-icon btn-outline no-print"
                       onClick={() => eliminarMonto(m.id)}

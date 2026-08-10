@@ -16,6 +16,8 @@ import {
   getRamas,
   getRegistros,
   getCobros,
+  getMontosEntregados,
+  migrarMontosEntregados,
   getSession,
   login,
   logout,
@@ -49,6 +51,7 @@ export default function App() {
   const [ramas, setRamas] = useState([]);
   const [registros, setRegistros] = useState([]);
   const [cobros, setCobros] = useState([]);
+  const [montosEntregados, setMontosEntregados] = useState({});
   const [importarOpen, setImportarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
@@ -84,6 +87,32 @@ export default function App() {
     setCobros(c);
   }, []);
 
+  const loadMontos = useCallback(async () => {
+    try {
+      const m = await getMontosEntregados();
+      setMontosEntregados(m || {});
+    } catch {}
+  }, []);
+
+  // Migración única: sube los montos que quedaron guardados en este navegador
+  useEffect(() => {
+    if (!currentAdmin) return;
+    if (localStorage.getItem('gm_montos_migrados') === '1') return;
+    const raw = localStorage.getItem('gm_montos_entregados');
+    if (!raw) { localStorage.setItem('gm_montos_migrados', '1'); return; }
+    try {
+      const map = JSON.parse(raw);
+      migrarMontosEntregados(map)
+        .then((r) => {
+          localStorage.setItem('gm_montos_migrados', '1');
+          if (r?.montos) setMontosEntregados(r.montos);
+        })
+        .catch(() => {});
+    } catch {
+      localStorage.setItem('gm_montos_migrados', '1');
+    }
+  }, [currentAdmin]);
+
   useEffect(() => {
     loadSession();
   }, [loadSession]);
@@ -91,8 +120,8 @@ export default function App() {
   useEffect(() => {
     if (!currentAdmin) return;
     setLoading(true);
-    Promise.all([loadBase(), loadRegistros(), loadCobros()]).finally(() => setLoading(false));
-  }, [currentAdmin, loadBase, loadRegistros]);
+    Promise.all([loadBase(), loadRegistros(), loadCobros(), loadMontos()]).finally(() => setLoading(false));
+  }, [currentAdmin, loadBase, loadRegistros, loadCobros, loadMontos]);
 
   // Auto-refresh cada 30 segundos
   useEffect(() => {
@@ -101,9 +130,10 @@ export default function App() {
       loadBase();
       loadRegistros();
       loadCobros();
+      loadMontos();
     }, 30000);
     return () => clearInterval(interval);
-  }, [currentAdmin, loadBase, loadRegistros, loadCobros]);
+  }, [currentAdmin, loadBase, loadRegistros, loadCobros, loadMontos]);
 
   const refresh = useCallback(() => {
     loadBase();
@@ -118,7 +148,7 @@ export default function App() {
     const data = await login(credentials);
     setCurrentAdmin(data.admin);
     setLoading(true);
-    await Promise.all([loadBase(), loadRegistros(), loadCobros()]);
+    await Promise.all([loadBase(), loadRegistros(), loadCobros(), loadMontos()]);
     setLoading(false);
   };
 
@@ -162,7 +192,7 @@ export default function App() {
         <div className="content">
           {activeTab === 'semana' && (
           <>
-            <SummaryCards trabajadores={trabajadores.filter(t => t.activo !== false)} registros={registros} ramas={ramas} semanaKey={semanaKey} />
+            <SummaryCards trabajadores={trabajadores.filter(t => t.activo !== false)} registros={registros} ramas={ramas} semanaKey={semanaKey} montosEntregados={montosEntregados} />
             <SemanaTab
               trabajadores={trabajadores.filter(t => t.activo !== false)}
               ramas={ramas}
@@ -197,6 +227,10 @@ export default function App() {
             semanaKey={semanaKey}
             semanaOffset={semanaOffset}
             setSemanaOffset={setSemanaOffset}
+            montosEntregados={montosEntregados}
+            onMontosChange={(periodKey, montos) =>
+              setMontosEntregados(prev => ({ ...prev, [periodKey]: montos }))
+            }
           />
         )}
 

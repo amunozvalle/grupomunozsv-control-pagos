@@ -1,21 +1,14 @@
 import React from 'react';
 import { fmt, calcPago, DIAS_KEYS } from '../utils/week';
 
-// Total entregado de la semana (los montos que se ingresan en el Reporte, guardados por semana)
-function getTotalEntregado(semanaKey) {
-  try {
-    const raw = localStorage.getItem('gm_montos_entregados');
-    if (!raw) return 0;
-    const all = JSON.parse(raw);
-    const arr = all[`semana_${semanaKey}`];
-    if (!Array.isArray(arr)) return 0;
-    return arr.reduce((s, m) => s + (Number(m.monto) || 0), 0);
-  } catch {
-    return 0;
-  }
+// Total entregado de la semana (los montos que se ingresan en el Reporte, guardados en el servidor)
+function getTotalEntregado(montosEntregados, semanaKey) {
+  const arr = montosEntregados?.[`semana_${semanaKey}`];
+  if (!Array.isArray(arr)) return 0;
+  return arr.reduce((s, m) => s + (Number(m.monto) || 0), 0);
 }
 
-export default function SummaryCards({ trabajadores, registros, ramas = [], semanaKey }) {
+export default function SummaryCards({ trabajadores, registros, ramas = [], semanaKey, montosEntregados = {} }) {
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
 
   let totalNomina = 0;
@@ -39,7 +32,7 @@ export default function SummaryCards({ trabajadores, registros, ramas = [], sema
   const balanceRestante = totalNomina - totalPagado;
 
   // Total entregado y sobrante/faltante de la semana
-  const totalEntregado = getTotalEntregado(semanaKey);
+  const totalEntregado = getTotalEntregado(montosEntregados, semanaKey);
   const hayEntrega = totalEntregado > 0;
   const sobrante = totalEntregado - totalNomina; // negativo = faltante
 
