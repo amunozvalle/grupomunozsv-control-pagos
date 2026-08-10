@@ -140,6 +140,15 @@ const db = {
     save(_db);
     return _db.montosEntregados[periodKey] || [];
   },
+  getFlag(nombre) {
+    return (_db.flags || {})[nombre] || null;
+  },
+  setFlag(nombre, valor) {
+    if (!_db.flags) _db.flags = {};
+    _db.flags[nombre] = valor;
+    save(_db);
+    return valor;
+  },
   getMontosHistorial() {
     return Array.isArray(_db.montosHistorial) ? [..._db.montosHistorial].reverse() : [];
   },

@@ -3,7 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { attachSession, requireAdmin, requireViewer } = require('./auth');
-const { backupToGithub } = require('./backup-github');
+const { backupToGithub, getUltimoBackup } = require('./backup-github');
 const { initWhatsApp, enviarRecordatorios, getStatus: waStatus } = require('./whatsapp-bot');
 
 // ── Validaciones de entorno críticas ──────────────────────────────────────
@@ -35,6 +35,9 @@ app.use('/api/registros', requireViewer, require('./routes/registros'));
 app.use('/api/whatsapp', requireAdmin, require('./routes/whatsapp'));
 app.use('/api/cobros', requireViewer, require('./routes/cobros'));
 app.use('/api/montos', requireViewer, require('./routes/montos'));
+
+// Estado del respaldo automatico (para saber si esta funcionando o fallando)
+app.get('/api/backup/estado', requireViewer, (req, res) => res.json(getUltimoBackup()));
 app.use('/api/admin-users', requireAdmin, require('./routes/adminUsers'));
 app.get('/api/audit', requireAdmin, require('./routes/audit'));
 
@@ -80,6 +83,9 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const PORT = Number(process.env.PORT) || 3001;
+// Reparación única de montos entregados perdidos (ver backend/repair-montos.js)
+require('./repair-montos').repararMontos();
+
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 
