@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DIAS_KEYS, DIAS_LABELS, fmt, calcPago, formatSemana } from '../../utils/week';
-import { getRegistrosMes, saveMontosPeriodo, migrarMontosEntregados } from '../../api';
+import { getRegistrosMes, saveMontosPeriodo, migrarMontosEntregados, getMontosEntregados } from '../../api';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -42,6 +42,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const dirtyRef = useRef(false);
   const [recuperando, setRecuperando] = useState(false);
   const [recuperado, setRecuperado] = useState(null);
+  const [listaServidor, setListaServidor] = useState(null);
 
   const ramaMap = Object.fromEntries(ramas.map((r) => [r.id, r]));
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
@@ -135,6 +136,28 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       setRecuperado(lineas.join(' · '));
     } finally {
       setRecuperando(false);
+    }
+  }
+
+  // Muestra TODO lo que el servidor tiene guardado, período por período
+  async function verServidor() {
+    setListaServidor('cargando');
+    try {
+      const map = await getMontosEntregados();
+      const filas = Object.entries(map || {})
+        .map(([k, v]) => ({
+          key: k,
+          total: (Array.isArray(v) ? v : []).reduce((s, m) => s + (Number(m.monto) || 0), 0),
+          detalle: (Array.isArray(v) ? v : [])
+            .filter(m => Number(m.monto) > 0)
+            .map(m => `${m.label || 'sin nombre'}: $${Number(m.monto).toFixed(2)}`)
+            .join(' · '),
+        }))
+        .filter(f => f.total > 0)
+        .sort((a, b) => a.key.localeCompare(b.key));
+      setListaServidor(filas);
+    } catch (e) {
+      setListaServidor(`Error: ${e.message}`);
     }
   }
 
@@ -460,6 +483,14 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                 </span>
                 <button
                   className="btn btn-outline btn-sm no-print"
+                  onClick={verServidor}
+                  style={{ fontSize: '0.8rem' }}
+                  title="Muestra todo lo que el servidor tiene guardado"
+                >
+                  🗄 Ver servidor
+                </button>
+                <button
+                  className="btn btn-outline btn-sm no-print"
                   onClick={recuperarDelNavegador}
                   disabled={recuperando}
                   style={{ fontSize: '0.8rem' }}
@@ -484,6 +515,32 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                 padding: '0.5rem 0.6rem', lineHeight: 1.5, wordBreak: 'break-word',
               }}>
                 {recuperado}
+              </div>
+            )}
+
+            {listaServidor && (
+              <div className="no-print" style={{
+                fontSize: '0.8rem', marginBottom: '0.6rem',
+                background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6,
+                padding: '0.6rem', lineHeight: 1.6,
+              }}>
+                {listaServidor === 'cargando' ? 'Consultando servidor…'
+                  : typeof listaServidor === 'string' ? listaServidor
+                  : listaServidor.length === 0 ? 'El servidor NO tiene ningún monto guardado.'
+                  : (
+                    <>
+                      <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
+                        El servidor tiene {listaServidor.length} período(s):
+                      </div>
+                      {listaServidor.map(f => (
+                        <div key={f.key} style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                          <strong style={{ fontFamily: 'DM Mono, monospace' }}>{f.key.replace('semana_', 'Semana ')}</strong>
+                          <span style={{ fontFamily: 'DM Mono, monospace', color: 'var(--gold)' }}>${f.total.toFixed(2)}</span>
+                          <span style={{ color: 'var(--text-dim)' }}>{f.detalle}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
               </div>
             )}
 
