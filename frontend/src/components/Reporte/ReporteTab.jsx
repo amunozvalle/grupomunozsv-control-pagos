@@ -85,29 +85,54 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   }, [filtro, mesYear, mesMonth]);
 
   // Sube al servidor los montos que quedaron guardados en ESTE navegador
+  // + diagnóstico de qué hay realmente en el almacenamiento del navegador
   async function recuperarDelNavegador() {
     setRecuperando(true);
     setRecuperado(null);
+    const lineas = [];
     try {
-      const raw = localStorage.getItem('gm_montos_entregados');
-      if (!raw) { setRecuperado('No hay montos guardados en este navegador.'); return; }
+      // 1. Inventario completo del almacenamiento
+      const claves = [];
+      for (let i = 0; i < localStorage.length; i++) claves.push(localStorage.key(i));
+      lineas.push(`Navegador: ${claves.length} clave(s) guardada(s)${claves.length ? ': ' + claves.join(', ') : ''}`);
+
+      let raw = localStorage.getItem('gm_montos_entregados');
+      let origen = 'localStorage';
+      if (!raw) {
+        raw = sessionStorage.getItem('gm_montos_entregados');
+        if (raw) origen = 'sessionStorage';
+      }
+
+      if (!raw) {
+        lineas.push('La clave gm_montos_entregados NO existe en este navegador.');
+        setRecuperado(lineas.join(' · '));
+        return;
+      }
+
+      lineas.push(`Encontrada en ${origen}: ${raw.length} caracteres.`);
       const map = JSON.parse(raw);
+      const periodos = Object.keys(map);
+      const conMonto = periodos.filter(
+        (k) => Array.isArray(map[k]) && map[k].some((m) => Number(m?.monto) > 0)
+      );
+      lineas.push(`${periodos.length} período(s), ${conMonto.length} con monto > 0.`);
+      if (conMonto.length) lineas.push(`Períodos: ${conMonto.join(', ')}`);
+
       const r = await migrarMontosEntregados(map);
-      const encontrados = Object.values(map).filter(
-        (v) => Array.isArray(v) && v.some((m) => Number(m?.monto) > 0)
-      ).length;
       if (r?.importados > 0) {
-        setRecuperado(`Se recuperaron ${r.importados} período(s). Recargá la página.`);
+        lineas.push(`✅ Se subieron ${r.importados} al servidor. Recargá la página.`);
         if (onMontosChange && r.montos) {
           for (const [k, v] of Object.entries(r.montos)) onMontosChange(k, v);
         }
-      } else if (encontrados > 0) {
-        setRecuperado(`Se encontraron ${encontrados} período(s), ya estaban en el servidor.`);
+      } else if (conMonto.length) {
+        lineas.push('Ya estaban todos en el servidor.');
       } else {
-        setRecuperado('No hay montos guardados en este navegador.');
+        lineas.push('Los períodos guardados están vacíos (monto en 0).');
       }
-    } catch {
-      setRecuperado('No se pudo leer el guardado del navegador.');
+      setRecuperado(lineas.join(' · '));
+    } catch (e) {
+      lineas.push(`Error: ${e.message}`);
+      setRecuperado(lineas.join(' · '));
     } finally {
       setRecuperando(false);
     }
@@ -453,7 +478,11 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
             </div>
 
             {recuperado && (
-              <div className="no-print" style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
+              <div className="no-print" style={{
+                fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '0.6rem',
+                background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6,
+                padding: '0.5rem 0.6rem', lineHeight: 1.5, wordBreak: 'break-word',
+              }}>
                 {recuperado}
               </div>
             )}
