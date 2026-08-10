@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DIAS_KEYS, DIAS_LABELS, fmt, calcPago, formatSemana } from '../../utils/week';
-import { getRegistrosMes, saveMontosPeriodo } from '../../api';
+import { getRegistrosMes, saveMontosPeriodo, migrarMontosEntregados } from '../../api';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -40,6 +40,8 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
   const [guardando, setGuardando] = useState(false);
   const saveTimer = useRef(null);
   const dirtyRef = useRef(false);
+  const [recuperando, setRecuperando] = useState(false);
+  const [recuperado, setRecuperado] = useState(null);
 
   const ramaMap = Object.fromEntries(ramas.map((r) => [r.id, r]));
   const trabajadoresMap = Object.fromEntries(trabajadores.map((t) => [t.id, t]));
@@ -81,6 +83,35 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
       .then(setRegistrosMes)
       .finally(() => setLoadingMes(false));
   }, [filtro, mesYear, mesMonth]);
+
+  // Sube al servidor los montos que quedaron guardados en ESTE navegador
+  async function recuperarDelNavegador() {
+    setRecuperando(true);
+    setRecuperado(null);
+    try {
+      const raw = localStorage.getItem('gm_montos_entregados');
+      if (!raw) { setRecuperado('No hay montos guardados en este navegador.'); return; }
+      const map = JSON.parse(raw);
+      const r = await migrarMontosEntregados(map);
+      const encontrados = Object.values(map).filter(
+        (v) => Array.isArray(v) && v.some((m) => Number(m?.monto) > 0)
+      ).length;
+      if (r?.importados > 0) {
+        setRecuperado(`Se recuperaron ${r.importados} período(s). Recargá la página.`);
+        if (onMontosChange && r.montos) {
+          for (const [k, v] of Object.entries(r.montos)) onMontosChange(k, v);
+        }
+      } else if (encontrados > 0) {
+        setRecuperado(`Se encontraron ${encontrados} período(s), ya estaban en el servidor.`);
+      } else {
+        setRecuperado('No hay montos guardados en este navegador.');
+      }
+    } catch {
+      setRecuperado('No se pudo leer el guardado del navegador.');
+    } finally {
+      setRecuperando(false);
+    }
+  }
 
   function agregarMonto() {
     persistir([...montos, { id: Date.now(), label: '', monto: '' }]);
@@ -404,6 +435,15 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                 </span>
                 <button
                   className="btn btn-outline btn-sm no-print"
+                  onClick={recuperarDelNavegador}
+                  disabled={recuperando}
+                  style={{ fontSize: '0.8rem' }}
+                  title="Sube al servidor los montos que quedaron guardados en este navegador"
+                >
+                  {recuperando ? 'Recuperando…' : '↻ Recuperar de este navegador'}
+                </button>
+                <button
+                  className="btn btn-outline btn-sm no-print"
                   onClick={agregarMonto}
                   style={{ fontSize: '0.8rem' }}
                 >
@@ -411,6 +451,12 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                 </button>
               </div>
             </div>
+
+            {recuperado && (
+              <div className="no-print" style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
+                {recuperado}
+              </div>
+            )}
 
             {/* Lista de casillas */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
