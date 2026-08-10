@@ -472,7 +472,7 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
           </div>
 
           {/* Montos entregados */}
-          <div className="print-sobrante" style={{
+          <div className={`print-sobrante ${totalEntregado > 0 ? '' : 'no-print'}`} style={{
             background: 'var(--surface)', border: '1px solid var(--border)',
             borderRadius: 8, padding: '1rem', marginTop: '1rem',
           }}>
@@ -579,7 +579,11 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
             {/* Lista de casillas */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {montos.map((m, idx) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div
+                  key={m.id}
+                  className={Number(m.monto) > 0 ? '' : 'no-print'}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}
+                >
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)', minWidth: 20, textAlign: 'right' }}>
                     {idx + 1}.
                   </span>
