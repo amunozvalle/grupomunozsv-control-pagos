@@ -21,6 +21,13 @@ function getPeriodKey(filtro, semanaKey, diaSeleccionado, mesYear, mesMonth) {
 
 const filaVacia = () => [{ id: Date.now(), label: '', monto: '' }];
 
+// Cuántas semanas de diferencia hay entre una semanaKey y la semana actual
+function offsetDeSemana(targetKey, semanaKeyActual) {
+  const a = new Date(targetKey + 'T12:00:00');
+  const b = new Date(semanaKeyActual + 'T12:00:00');
+  return Math.round((a - b) / (7 * 24 * 60 * 60 * 1000));
+}
+
 function fromServer(map, periodKey) {
   const saved = map?.[periodKey];
   if (Array.isArray(saved) && saved.length > 0) return saved;
@@ -532,13 +539,38 @@ export default function ReporteTab({ trabajadores, ramas, registros, semanaKey, 
                       <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
                         El servidor tiene {listaServidor.length} período(s):
                       </div>
-                      {listaServidor.map(f => (
-                        <div key={f.key} style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                          <strong style={{ fontFamily: 'DM Mono, monospace' }}>{f.key.replace('semana_', 'Semana ')}</strong>
-                          <span style={{ fontFamily: 'DM Mono, monospace', color: 'var(--gold)' }}>${f.total.toFixed(2)}</span>
-                          <span style={{ color: 'var(--text-dim)' }}>{f.detalle}</span>
-                        </div>
-                      ))}
+                      {listaServidor.map(f => {
+                        const esSemana = f.key.startsWith('semana_');
+                        const key = f.key.replace('semana_', '');
+                        const actual = f.key === periodKey;
+                        return (
+                          <div
+                            key={f.key}
+                            onClick={() => {
+                              if (!esSemana) return;
+                              setFiltro('semana');
+                              setSemanaOffset(semanaOffset + offsetDeSemana(key, semanaKey));
+                              setListaServidor(null);
+                            }}
+                            style={{
+                              display: 'flex', gap: '0.6rem', flexWrap: 'wrap',
+                              cursor: esSemana ? 'pointer' : 'default',
+                              padding: '0.2rem 0.35rem', borderRadius: 4,
+                              background: actual ? 'rgba(245,158,11,0.12)' : 'transparent',
+                            }}
+                          >
+                            <strong style={{ fontFamily: 'DM Mono, monospace', color: esSemana ? 'var(--gold)' : undefined }}>
+                              {esSemana ? `Semana ${key}` : f.key}
+                            </strong>
+                            <span style={{ fontFamily: 'DM Mono, monospace' }}>${f.total.toFixed(2)}</span>
+                            <span style={{ color: 'var(--text-dim)' }}>{f.detalle}</span>
+                            {actual && <span style={{ color: 'var(--text-dim)' }}>← estás aquí</span>}
+                          </div>
+                        );
+                      })}
+                      <div style={{ color: 'var(--text-dim)', marginTop: '0.4rem', fontSize: '0.75rem' }}>
+                        Tocá una semana para ir a ella. Estás viendo: {periodKey.replace('semana_', 'Semana ')}
+                      </div>
                     </>
                   )}
               </div>
